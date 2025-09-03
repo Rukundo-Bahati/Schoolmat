@@ -6,12 +6,12 @@
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=18.17.0 <20.0.0"
+    "node": ">=20.0.0 <21.0.0"
   },
   "scripts": {
-    "build": "npx nest build",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "npx nest start",
+    "start": "nest start",
     "dev": "npx nest start --watch",
     "start:dev": "npx nest start --watch",
     "start:debug": "npx nest start --debug --watch",
