@@ -31,7 +31,7 @@ npm i -g vercel
 
 5. Add Environment Variables:
    ```
-   NEXT_PUBLIC_API_URL=https://schoolmart-backend.onrender.com/api
+   NEXT_PUBLIC_API_URL=https://schoolmart-backend.onrender.com
    ```
 
 6. Click "Deploy"

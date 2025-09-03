@@ -65,6 +65,8 @@ git push -u origin main
 
 5. **Add Environment Variables**:
    - `NEXT_PUBLIC_API_URL`: `https://schoolmart-backend.onrender.com`
+   - `NEXT_PUBLIC_STRIPE_PUBLIC_KEY`: `pk_live_your_stripe_publishable_key`
+   - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`: `dwk1eq0om`
 
 6. **Deploy**
 
