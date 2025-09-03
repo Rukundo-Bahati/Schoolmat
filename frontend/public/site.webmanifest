@@ -1,0 +1,21 @@
+{
+  "name": "SchoolMart - School Supplies Store",
+  "short_name": "SchoolMart",
+  "description": "Your one-stop shop for quality school supplies in Rwanda",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
