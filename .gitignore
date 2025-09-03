@@ -73,9 +73,14 @@ pids
 ehthumbs.db
 Thumbs.db
 
-# Uploads
-uploads/
-backend/uploads/
+# Uploads (ignore uploaded files but allow module files)
+uploads/*
+!uploads/*.ts
+!uploads/*.js
+backend/uploads/*
+!backend/uploads/*.ts
+!backend/uploads/*.js
+backend/src/uploads/uploaded-files/
 
 # Database
 *.db
