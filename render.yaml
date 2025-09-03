@@ -3,7 +3,7 @@ services:
     name: schoolmart-backend
     env: node
     rootDir: backend
-    buildCommand: npm ci --include=dev && npm run build
+    buildCommand: npm ci --include=dev && npx nest build
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
