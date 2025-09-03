@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import { fetchProducts, fetchCategories, fetchProductsByCategory, getCartTotal, addToCart, type Product, type SchoolManagerProduct } from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
-import { PurchaseCelebration } from "@/components/purchase-celebration"
+import { PartyCelebration } from "@/components/party-celebration"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 
@@ -419,7 +419,7 @@ export default function ProductsPage() {
         onAddToCart={handleAddToCart}
       />
 
-      <PurchaseCelebration
+      <PartyCelebration
         show={showCelebration}
         onComplete={() => {
           setShowCelebration(false)

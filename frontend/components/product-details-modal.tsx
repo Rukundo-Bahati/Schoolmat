@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { X, Star, ShoppingCart } from "lucide-react"
 import { type Product } from "@/lib/api"
-import { PurchaseCelebration } from "@/components/purchase-celebration"
+import { PartyCelebration } from "@/components/party-celebration"
 
 interface ProductDetailsModalProps {
   product: Product | null
@@ -21,10 +21,7 @@ export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, 
 
   if (!isOpen || !product) return null
 
-  const handlePurchaseClick = () => {
-    router.push(`/product/${product.id}`)
-    onClose()
-  }
+
 
   const handleAddToCartClick = () => {
     if (onAddToCart) {
@@ -129,14 +126,6 @@ export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, 
                       Add to Cart
                     </Button>
                   )}
-                  <Button
-                    onClick={handlePurchaseClick}
-                    className="flex-1 rounded-full bg-blue-700 hover:bg-blue-800 py-3 text-lg"
-                    disabled={product.inStock === false}
-                  >
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    Purchase Now
-                  </Button>
                   <Button variant="outline" onClick={onClose} className="rounded-full bg-transparent px-6">
                     Continue Shopping
                   </Button>
@@ -147,7 +136,7 @@ export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, 
         </div>
       </div>
 
-      <PurchaseCelebration show={showCelebration} onComplete={handleCelebrationComplete} productName={product.name} />
+      <PartyCelebration show={showCelebration} onComplete={handleCelebrationComplete} productName={product.name} />
     </>
   )
 }

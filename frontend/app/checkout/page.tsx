@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import party from "party-js"
+
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -23,7 +23,7 @@ import {
   Globe,
 } from "lucide-react"
 
-import { paymentMethods, type CartItem } from "@/mock-data"
+import { paymentMethods, type CartItem } from "@/lib/mock-data"
 import { useAuth } from "@/lib/auth-context"
 import { fetchCartItems, fetchUserProfile, fetchSchoolInfo, submitOrder, sendOrderNotifications, clearCart, type CartItem as ApiCartItem, type UserProfile, type SchoolInfo } from "@/lib/api"
 import Navbar from "@/components/navbar"
@@ -309,15 +309,48 @@ export default function CheckoutPage() {
       const orderResult = await submitOrder(token, orderData)
 
       if (orderResult.success) {
-        // Fire party.js confetti celebration
-        party.confetti(document.body, {
-          count: 100,
-          size: 1.5,
-          speed: 500,
-          spread: 70
-        })
+          // Custom celebration animation
+          const celebration = document.createElement('div');
+          celebration.className = 'fixed inset-0 pointer-events-none z-50';
+          celebration.innerHTML = `
+            <style>
+              .confetti {
+                position: absolute;
+                width: 10px;
+                height: 10px;
+                background: #ff6b6b;
+                animation: fall 3s linear forwards;
+              }
+              .confetti:nth-child(2n) { background: #4ecdc4; }
+              .confetti:nth-child(3n) { background: #45b7d1; }
+              .confetti:nth-child(4n) { background: #96ceb4; }
+              .confetti:nth-child(5n) { background: #feca57; }
+              @keyframes fall {
+                to {
+                  transform: translateY(100vh) rotate(360deg);
+                }
+              }
+            </style>
+          `;
+          
+          // Create confetti particles
+          for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.animationDelay = Math.random() * 3 + 's';
+            confetti.style.backgroundColor = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'][Math.floor(Math.random() * 5)];
+            celebration.appendChild(confetti);
+          }
+          
+          document.body.appendChild(celebration);
+          
+          // Remove celebration after animation
+          setTimeout(() => {
+            celebration.remove();
+          }, 3000);
 
-        // Send notifications (SMS and email) - optional
+          // Send notifications (SMS and email) - optional
         try {
           console.log("Attempting to send order notifications...")
           await sendOrderNotifications(token, orderData)
