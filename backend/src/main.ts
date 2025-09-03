@@ -10,7 +10,7 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://schoolmart-frontend.vercel.app',
+    'https://schoolmart.vercel.app',
     'https://schoolmart-*.vercel.app',
     process.env.FRONTEND_URL || 'http://localhost:3000'
   ];
