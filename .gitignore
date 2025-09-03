@@ -86,6 +86,8 @@ backend/src/uploads/uploaded-files/
 *.db
 *.sqlite
 *.sqlite3
+*.psql
+schoolmart_full_backup.sql
 
 # Temporary files
 tmp/
