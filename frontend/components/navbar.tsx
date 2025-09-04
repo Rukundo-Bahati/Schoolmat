@@ -13,7 +13,8 @@ import { Product } from "@/lib/api";
 export default function Navbar() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const { cartCount } = useCart();
+  const { cart } = useCart();
+  const cartCount = cart?.length || 0;
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);

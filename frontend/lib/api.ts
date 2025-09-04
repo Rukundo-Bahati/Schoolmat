@@ -71,6 +71,7 @@ export interface Product {
   name: string
   price: string
   image: string
+  imageUrl?: string
   required: boolean
   description?: string
   rating?: number

@@ -466,7 +466,15 @@ export default function OrdersTab({
 
       {selectedOrder && (
         <OrderDetailsModal
-          order={selectedOrder}
+          order={{
+            ...selectedOrder,
+            items: selectedOrder.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            category: item.category
+          }))
+          }}
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false)

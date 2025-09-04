@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsArray, ValidateNested, IsEnum } from 'class-validator';
+import { IsString, IsNumber, IsArray, ValidateNested, IsEnum, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderStatus } from '../entities/order.entity';
@@ -154,7 +154,7 @@ export class BulkUpdateOrderStatusDto {
     type: [String]
   })
   @IsArray()
-  @IsString({ each: true })
+  @IsUUID('4', { each: true })
   orderIds: string[];
 
   @ApiProperty({
