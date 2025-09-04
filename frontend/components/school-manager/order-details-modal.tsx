@@ -17,7 +17,7 @@ interface Order {
     category: string
   }>
   totalAmount: number
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  status: "pending" | "processing" | "delivered" | "cancelled"
   orderDate: string
   paymentMethod: string
   deliveryAddress: string
@@ -47,9 +47,7 @@ export default function OrderDetailsModal({ order, isOpen, onClose }: OrderDetai
                     ? "bg-yellow-100 text-yellow-800"
                     : order.status === "processing"
                       ? "bg-blue-100 text-blue-800"
-                      : order.status === "shipped"
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-green-100 text-green-800"
+                      : "bg-green-100 text-green-800"
                 }
               >
                 {order.status.charAt(0).toUpperCase() + order.status.slice(1)}

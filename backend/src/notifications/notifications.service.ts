@@ -9,7 +9,7 @@ export interface NotificationData {
   userId: string;
   title: string;
   message: string;
-  type: 'order' | 'payment' | 'shipping' | 'general';
+  type: 'order' | 'payment' | 'general';
   orderId?: string;
   metadata?: any;
 }
@@ -67,30 +67,6 @@ export class NotificationsService {
     await this.sendNotification(notification);
   }
 
-  async sendShippingNotification(orderId: string, trackingNumber?: string): Promise<void> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-      relations: ['user'],
-    });
-
-    if (!order) {
-      throw new Error('Order not found');
-    }
-
-    const message = trackingNumber
-      ? `Your order #${orderId} has been shipped. Tracking number: ${trackingNumber}`
-      : `Your order #${orderId} has been shipped.`;
-
-    const notification: NotificationData = {
-      userId: order.user.id,
-      title: 'Order Shipped',
-      message,
-      type: 'shipping',
-      orderId,
-    };
-
-    await this.sendNotification(notification);
-  }
 
   async sendOrderDeliveredNotification(orderId: string): Promise<void> {
     const order = await this.orderRepository.findOne({
@@ -106,7 +82,7 @@ export class NotificationsService {
       userId: order.user.id,
       title: 'Order Delivered',
       message: `Your order #${orderId} has been delivered successfully.`,
-      type: 'shipping',
+      type: 'order',
       orderId,
     };
 
@@ -201,6 +177,47 @@ export class NotificationsService {
       console.log(`Marked notification ${notificationId} as read for user ${userId}`);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+      throw error;
+    }
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    try {
+      await this.notificationRepository.update(
+        { userId, isRead: false },
+        { isRead: true }
+      );
+      console.log(`Marked all notifications as read for user ${userId}`);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+      throw error;
+    }
+  }
+
+  private isValidUUID(uuid: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  }
+
+  async deleteNotification(notificationId: string, userId: string): Promise<void> {
+    try {
+      // Validate that notificationId is a valid UUID
+      if (!this.isValidUUID(notificationId)) {
+        throw new Error('Invalid notification ID format. Must be a valid UUID.');
+      }
+
+      const result = await this.notificationRepository.delete({
+        id: notificationId,
+        userId,
+      });
+
+      if (result.affected === 0) {
+        throw new Error('Notification not found or you do not have permission to delete it');
+      }
+
+      console.log(`Deleted notification ${notificationId} for user ${userId}`);
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
       throw error;
     }
   }

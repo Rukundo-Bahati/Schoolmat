@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Bell, ArrowRightFromLine, ArrowLeft } from "lucide-react"
+import { Bell, ArrowRightFromLine, ArrowLeft, Home } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface DashboardNavbarProps {
@@ -19,11 +19,15 @@ export default function DashboardNavbar({ notificationsCount, onLogout }: Dashbo
     }
   }
 
+  const handleHome = () => {
+    router.push('/')
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-blue-800 shadow-sm border-b z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Back button and Logo */}
+          {/* Back button, Home button, Logo and Title */}
           <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
@@ -32,6 +36,14 @@ export default function DashboardNavbar({ notificationsCount, onLogout }: Dashbo
               className="rounded-full text-white hover:bg-blue-700"
             >
               <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleHome}
+              className="rounded-full text-white hover:bg-blue-700"
+            >
+              <Home className="h-5 w-5" />
             </Button>
             <div className="flex items-center space-x-8">
               <span className="text-2xl font-bold text-white">

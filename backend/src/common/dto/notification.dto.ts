@@ -5,7 +5,7 @@ import { NotificationType, NotificationStatus } from '../entities/notification.e
 export class CreateNotificationDto {
   @ApiProperty({
     description: 'Notification title',
-    example: 'Order Shipped',
+    example: 'Order Delivered',
     type: 'string'
   })
   @IsString()
@@ -13,7 +13,7 @@ export class CreateNotificationDto {
 
   @ApiProperty({
     description: 'Notification message',
-    example: 'Your order #1234 has been shipped.',
+    example: 'Your order #1234 has been delivered.',
     type: 'string'
   })
   @IsString()
@@ -66,14 +66,14 @@ export class NotificationResponseDto {
 
   @ApiProperty({
     description: 'Notification title',
-    example: 'Order Shipped',
+    example: 'Order Delivered',
     type: 'string'
   })
   title: string;
 
   @ApiProperty({
     description: 'Notification message',
-    example: 'Your order #1234 has been shipped.',
+    example: 'Your order #1234 has been delivered.',
     type: 'string'
   })
   message: string;

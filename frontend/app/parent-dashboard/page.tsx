@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+// import toast from "react-hot-toast"
 import ProtectedRoute from "@/components/protected-route"
 import {
   User,
@@ -43,19 +44,29 @@ import {
   fetchParentOrders,
   fetchParentNotifications,
   fetchParentProfile,
+  markAllParentNotificationsAsRead,
+  deleteParentNotification,
   type ParentDashboardOverview,
   type ParentOrder,
   type ParentNotification,
   type ParentProfile,
 } from "@/lib/api"
 
-import { sidebarItems } from "@/mock-data"
+// Sidebar items for parent dashboard
+const sidebarItems = [
+  { id: "overview", label: "Overview", icon: "BarChart3" },
+  { id: "purchases", label: "Purchase History", icon: "ShoppingBag" },
+  { id: "pending", label: "Pending Orders", icon: "Clock" },
+  { id: "notifications", label: "Notifications", icon: "Bell" },
+  { id: "profile", label: "Profile", icon: "User" },
+  { id: "settings", label: "Settings", icon: "Settings" },
+]
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement)
 
 export default function ParentDashboard() {
   const router = useRouter()
-  const { user, token } = useAuth()
+  const { user, token, logout } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -128,9 +139,69 @@ export default function ParentDashboard() {
     fetchData()
   }, [token])
 
+  const handleMarkAllAsRead = async () => {
+    if (!token) return
+    try {
+      await markAllParentNotificationsAsRead(token)
+      setParentNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+      alert("All notifications marked as read!")
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error)
+      alert("Failed to mark all notifications as read.")
+    }
+  }
+
+  const handleDeleteNotification = async (id: string | number) => {
+    if (!token) {
+      console.error('No authentication token available');
+      return;
+    }
+    
+    console.log('Deleting notification with ID:', id, 'Type:', typeof id);
+    
+    // Convert ID to string if it's a number
+    let notificationId = typeof id === 'number' ? id.toString() : id;
+    
+    // If the ID is a number, try to find the full notification to get its UUID
+    if (typeof id === 'number' || !isNaN(Number(id))) {
+      const notification = parentNotifications.find(n => n.id === id.toString() || n.id === notificationId);
+      if (notification && notification.id) {
+        notificationId = notification.id; // Use the UUID from the notification
+      }
+    }
+    
+    // Validate ID is not empty and is a valid UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!notificationId || !uuidRegex.test(notificationId)) {
+      const errorMsg = `Invalid notification ID format: ${notificationId}. Expected a valid UUID.`;
+      console.error(errorMsg);
+      alert('Invalid notification ID format. Please try again.');
+      return;
+    }
+    
+    try {
+      console.log('Attempting to delete notification with ID:', notificationId);
+      await deleteParentNotification(notificationId, token);
+      
+      // Update the UI by removing the deleted notification
+      setParentNotifications(prev => {
+        const updated = prev.filter(n => n.id !== id.toString() && n.id !== notificationId);
+        console.log('Notification removed. Remaining notifications:', updated.length);
+        return updated;
+      });
+      
+      alert("Notification deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete notification.";
+      console.error("Error details:", { error, notificationId, type: typeof notificationId });
+      alert(errorMessage);
+    }
+  }
+
   // Transform API data to match component expectations
   const allPurchases = parentOrders.map((order, index) => ({
-    id: parseInt(order.id) || index + 1,
+    id: order.id || `order-${index + 1}`,
     item: order.items[0]?.productName || 'Multiple Items',
     date: order.orderDate,
     amount: order.totalAmount.toString(),
@@ -171,7 +242,7 @@ export default function ParentDashboard() {
   }))
 
   const notifications = parentNotifications.map((notification) => ({
-    id: notification.id,
+    id: parseInt(notification.id),
     message: notification.message,
     date: notification.createdAt,
     read: notification.isRead,
@@ -240,7 +311,7 @@ export default function ParentDashboard() {
   }
 
   const handleLogout = () => {
-    router.push("/")
+    logout()
   }
 
   const handleDownloadOrderHistory = async () => {
@@ -320,11 +391,16 @@ export default function ParentDashboard() {
 
   const doughnutChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: false, // Disable built-in legend since we have custom legend below
       },
     },
+    layout: {
+      padding: 20,
+    },
+    cutout: '60%', // Make the center hole larger to reduce overall size
   }
 
   if (loading) {
@@ -406,8 +482,8 @@ export default function ParentDashboard() {
 
               {activeTab === "notifications" && (
                 <NotificationsTab
-                  notifications={notifications as any}
-                  onMarkAllAsRead={() => {}}
+                  notifications={notifications.map(n => ({...n, id: n.id.toString()}))}
+                  onMarkAllAsRead={handleMarkAllAsRead}
                 />
               )}
 

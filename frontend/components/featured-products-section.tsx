@@ -6,7 +6,7 @@ import { ShoppingCart, Star } from "lucide-react";
 import { fetchFeaturedProducts } from "@/lib/api";
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: string;
   image: string;
@@ -19,7 +19,7 @@ interface Product {
 
 interface FeaturedProductsSectionProps {
   onViewProduct: (product: Product) => void;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, quantity: number) => void;
 }
 
 export default function FeaturedProductsSection({
@@ -159,7 +159,7 @@ export default function FeaturedProductsSection({
                     View Product
                   </Button>
                   <Button
-                    onClick={() => onAddToCart(product)}
+                    onClick={() => onAddToCart(product, 1)}
                     variant="outline"
                     className="w-full rounded-full border-blue-600 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm btn-enhanced py-1 sm:py-2"
                   >

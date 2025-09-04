@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ProductDetailsModal } from "@/components/product-details-modal";
 import { CartAnimation } from "@/components/cart-animation";
 import Navbar from "@/components/navbar";
+import { useCart } from "@/lib/cart-context";
 import HeroSection from "@/components/hero-section";
 import QuickAccessSection from "@/components/quick-access-section";
 import IntroducingSection from "@/components/introducing-section";
@@ -11,14 +12,13 @@ import BrowseCategoriesSection from "@/components/browse-categories-section";
 import FeaturedProductsSection from "@/components/featured-products-section";
 import ContactUsSection from "@/components/contact-us-section";
 import Footer from "@/components/footer";
-import { Product } from "@/lib/constants/products";
+import { Product } from "@/lib/api";
 
 export default function SchoolMartLanding() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showCartAnimation, setShowCartAnimation] = useState(false);
-
-
+  const { addToCart } = useCart();
 
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -31,12 +31,14 @@ export default function SchoolMartLanding() {
   };
 
   const handleViewPurchase = (product: Product) => {
-    console.log("[v0] Navigate to purchase page for product:", product.name);
+    // Add to cart and redirect to cart page
+    addToCart(product, 1);
+    window.location.href = "/cart";
   };
 
   const handleAddToCart = (product: Product) => {
+    addToCart(product, 1);
     setShowCartAnimation(true);
-    console.log("[v0] Added to cart:", product.name);
   };
 
   return (
@@ -58,6 +60,7 @@ export default function SchoolMartLanding() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onViewPurchase={handleViewPurchase}
+        onAddToCart={handleAddToCart}
       />
 
       <CartAnimation

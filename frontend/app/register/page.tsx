@@ -9,6 +9,8 @@ import { Eye, EyeOff, Check, X, ArrowLeft, Facebook, Twitter, Instagram } from "
 import { useAuth } from "@/lib/auth-context"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface PasswordStrength {
   score: number
@@ -108,7 +110,10 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) return
+    if (!validateForm()) {
+      toast.error("Please correct the errors in the form.");
+      return;
+    }
 
     setIsLoading(true)
     setErrors({})
@@ -120,13 +125,16 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         phone: formData.phone,
+        role: 'parent', // Default role for registration
       })
       // Navigate to email verification
-      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
+      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+      toast.success("Registration successful! Please verify your email.");
     } catch (error: any) {
-      setErrors({ general: error.message || "Registration failed" })
+      setErrors({ general: error.message || "Registration failed" });
+      toast.error(error.message || "Registration failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -309,6 +317,8 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
+      <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   )
 }

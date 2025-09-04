@@ -16,7 +16,7 @@ interface Order {
     category: string
   }>
   totalAmount: number
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  status: "pending" | "processing" | "delivered" | "cancelled"
   orderDate: string
   paymentMethod: string
   deliveryAddress: string

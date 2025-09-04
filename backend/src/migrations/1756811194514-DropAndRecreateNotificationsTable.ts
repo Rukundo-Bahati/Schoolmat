@@ -11,7 +11,7 @@ export class DropAndRecreateNotificationsTable1756811194514 implements Migration
 
         // Create enum types
         await queryRunner.query(`
-            CREATE TYPE "notification_type_enum" AS ENUM('order', 'payment', 'shipping', 'general')
+            CREATE TYPE "notification_type_enum" AS ENUM('order', 'payment', 'general')
         `);
 
         await queryRunner.query(`

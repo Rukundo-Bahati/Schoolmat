@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
+import ProtectedRoute from "@/components/protected-route"
 import {
   BarChart3,
   ShoppingCart,
@@ -49,9 +51,15 @@ import {
 
 import CustomerDetailsModal from "@/components/school-manager/customer-details-modal"
 
-import {
-  schoolManagerSidebarItems,
-} from "@/mock-data"
+// Sidebar items for school manager
+const schoolManagerSidebarItems = [
+  { id: "overview", label: "Dashboard Overview", icon: "BarChart3" },
+  { id: "orders", label: "Orders Management", icon: "ShoppingCart" },
+  { id: "stock", label: "Stock Management", icon: "Package" },
+  { id: "customers", label: "Customer Management", icon: "Users" },
+  { id: "analytics", label: "Analytics & Reports", icon: "TrendingUp" },
+  { id: "settings", label: "Settings", icon: "Settings" },
+]
 
 import {
   Chart as ChartJS,
@@ -66,13 +74,12 @@ import {
   LineElement,
 } from "chart.js"
 import { Bar, Doughnut, Line } from "react-chartjs-2"
-import { useAuth } from "@/lib/auth-context"
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement)
 
 export default function SchoolManagerDashboard() {
   const router = useRouter()
-  const { token, user, isLoading: authLoading } = useAuth()
+  const { token, user, logout, isLoading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
   const [searchQuery, setSearchQuery] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
@@ -86,7 +93,7 @@ export default function SchoolManagerDashboard() {
 
   // Redirect if user role is not school_manager
   useEffect(() => {
-    if (user && user.role !== "school_manager") {
+    if (user && user.role && user.role !== "school_manager") {
       router.push("/")
     }
   }, [user, router])
@@ -127,7 +134,7 @@ export default function SchoolManagerDashboard() {
   }, [token, authLoading])
 
   const handleLogout = () => {
-    router.push("/")
+    logout()
   }
 
   const sidebarItems = schoolManagerSidebarItems.map(item => ({
@@ -152,7 +159,7 @@ export default function SchoolManagerDashboard() {
   // Helper function to convert SchoolManagerProduct to Product
   const convertSchoolManagerProductToProduct = (schoolProduct: SchoolManagerProduct): Product => {
     return {
-      id: parseInt(schoolProduct.id),
+      id: schoolProduct.id,
       name: schoolProduct.name,
       price: schoolProduct.price.toString(),
       image: schoolProduct.imageUrl || '/placeholder.jpg',
@@ -190,13 +197,27 @@ export default function SchoolManagerDashboard() {
     }
   }
 
-  // Chart options
-  const chartOptions = {
+  // Chart options for line charts
+  const lineChartOptions = {
     responsive: true,
     plugins: {
       legend: {
-        position: "top" as const,
+        display: false,
       },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            let label = context.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed !== null) {
+              label += context.parsed + ' orders';
+            }
+            return label;
+          }
+        }
+      }
     },
     scales: {
       y: {
@@ -225,6 +246,31 @@ export default function SchoolManagerDashboard() {
     }
   }
 
+  // Chart options for pie charts
+  const pieChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom' as const,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            let label = context.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed !== null) {
+              label += context.parsed + ' orders';
+            }
+            return label;
+          }
+        }
+      }
+    },
+  }
+
   // Filtered orders based on search and status filter
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -240,17 +286,16 @@ export default function SchoolManagerDashboard() {
 
   // Generate chart data from API data
   const orderStatusData = salesData ? {
-    labels: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+    labels: ["Pending", "Processing", "Delivered", "Cancelled"],
     datasets: [
       {
         data: [
           salesData.orderStatusDistribution.find(s => s.status === "pending")?.count || 0,
           salesData.orderStatusDistribution.find(s => s.status === "processing")?.count || 0,
-          salesData.orderStatusDistribution.find(s => s.status === "shipped")?.count || 0,
           salesData.orderStatusDistribution.find(s => s.status === "delivered")?.count || 0,
           salesData.orderStatusDistribution.find(s => s.status === "cancelled")?.count || 0,
         ],
-        backgroundColor: ["#F59E0B", "#3B82F6", "#8B5CF6", "#10B981", "#EF4444"],
+        backgroundColor: ["#F59E0B", "#3B82F6", "#10B981", "#EF4444"],
       },
     ],
   } : null
@@ -388,7 +433,7 @@ export default function SchoolManagerDashboard() {
 
     // Use real user data for manager info
     const managerInfo = {
-      parentName: user ? `${user.firstName} ${user.lastName}` : "School Manager",
+      parentName: user && user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "School Manager",
       email: user?.email || "manager@kigaliprimary.edu.rw",
       phone: user?.phone || "+250 788 000 000",
       studentName: filteredOrders.length > 0 ? filteredOrders.map(o => o.studentName).join(", ") : "No Students",
@@ -451,7 +496,7 @@ export default function SchoolManagerDashboard() {
 
     // Use real user data for manager info
     const managerInfo = {
-      parentName: user ? `${user.firstName} ${user.lastName}` : "School Manager",
+      parentName: user && user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "School Manager",
       email: user?.email || "manager@kigaliprimary.edu.rw",
       phone: user?.phone || "+250 788 000 000",
       studentName: filteredOrders.length > 0 ? filteredOrders.map(o => o.studentName).join(", ") : "No Students",
@@ -500,7 +545,7 @@ export default function SchoolManagerDashboard() {
 
     // Use real user data for manager info
     const managerInfo = {
-      parentName: user ? `${user.firstName} ${user.lastName}` : "School Manager",
+      parentName: user && user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "School Manager",
       email: user?.email || "manager@kigaliprimary.edu.rw",
       phone: user?.phone || "+250 788 000 000",
       studentName: parentOrders.map(o => o.studentName).join(", "),
@@ -518,7 +563,8 @@ export default function SchoolManagerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute requiredRole="school_manager">
+      <div className="min-h-screen bg-gray-50">
       <DashboardNavbar
         notificationsCount={lowStockProducts.length}
         onLogout={handleLogout}
@@ -560,7 +606,7 @@ export default function SchoolManagerDashboard() {
                   lowStockProducts={lowStockProducts}
                   salesData={salesData}
                   orderStatusData={orderStatusData}
-                  chartOptions={chartOptions}
+                  chartOptions={pieChartOptions}
                   loadingAnalytics={loadingAnalytics}
                   analyticsError={analyticsError}
                   onRefreshAnalytics={handleRefreshAnalytics}
@@ -595,7 +641,7 @@ export default function SchoolManagerDashboard() {
                   salesData={salesData}
                   salesDataByTerm={salesDataByTerm}
                   productsSoldByTermData={productsSoldByTermData}
-                  chartOptions={chartOptions}
+                  chartOptions={pieChartOptions}
                 />
               )}
 
@@ -638,5 +684,6 @@ export default function SchoolManagerDashboard() {
         editingProduct={editingProduct}
       />
     </div>
+    </ProtectedRoute>
   )
 }

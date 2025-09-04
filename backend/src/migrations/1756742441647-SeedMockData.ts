@@ -49,7 +49,7 @@ export class SeedMockData1756742441647 implements MigrationInterface {
             INSERT INTO "orders" ("id", "userId", "parentName", "parentEmail", "parentPhone", "studentName", "studentGrade", "studentClass", "totalAmount", "status", "orderDate", "paymentMethod", "deliveryAddress", "createdAt", "updatedAt") VALUES
             ('770e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'John Doe', 'john.doe@email.com', '+250 788 123 456', 'Jane Doe', 'Grade 5', '5A', 23500, 'pending', '2024-01-20 00:00:00', 'MTN MoMo', 'Kigali, Rwanda', '2024-01-20 00:00:00', '2024-01-20 00:00:00'),
             ('770e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440002', 'Mary Smith', 'mary.smith@email.com', '+250 788 987 654', 'Tom Smith', 'Grade 4', '4B', 18400, 'processing', '2024-01-19 00:00:00', 'Airtel Money', 'Kigali, Rwanda', '2024-01-19 00:00:00', '2024-01-19 00:00:00'),
-            ('770e8400-e29b-41d4-a716-446655440003', NULL, 'David Wilson', 'david.wilson@email.com', '+250 788 456 789', 'Sarah Wilson', 'Grade 6', '6A', 40800, 'shipped', '2024-01-18 00:00:00', 'Visa Card', 'Kigali, Rwanda', '2024-01-18 00:00:00', '2024-01-18 00:00:00'),
+            ('770e8400-e29b-41d4-a716-446655440003', NULL, 'David Wilson', 'david.wilson@email.com', '+250 788 456 789', 'Sarah Wilson', 'Grade 6', '6A', 40800, 'delivered', '2024-01-18 00:00:00', 'Visa Card', 'Kigali, Rwanda', '2024-01-18 00:00:00', '2024-01-18 00:00:00'),
             ('770e8400-e29b-41d4-a716-446655440004', NULL, 'Alice Johnson', 'alice.johnson@email.com', '+250 788 321 654', 'Mike Johnson', 'Grade 3', '3C', 11500, 'delivered', '2024-01-17 00:00:00', 'MTN MoMo', 'Kigali, Rwanda', '2024-01-17 00:00:00', '2024-01-17 00:00:00')
         `);
 

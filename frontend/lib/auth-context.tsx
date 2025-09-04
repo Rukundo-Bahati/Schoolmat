@@ -33,9 +33,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 // Helper functions for return URL management
 const getReturnUrl = (): string => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('return_url') || '/parent-dashboard'
+    return localStorage.getItem('return_url') || '/'
   }
-  return '/parent-dashboard'
+  return '/'
 }
 
 const setReturnUrl = (url: string): void => {
@@ -78,6 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error('Token validation failed:', error)
           localStorage.removeItem('access_token')
+          // Only redirect if we're on a protected route
+          if (window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/cart')) {
+            window.location.href = '/'
+          }
+        }
+      } else {
+        // Only redirect if we're on a protected route
+        if (window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/cart')) {
+          window.location.href = '/'
         }
       }
       setIsLoading(false)
@@ -106,16 +115,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Navigate to return URL or based on user role
         const returnUrl = getReturnUrl()
-        if (returnUrl && returnUrl !== '/parent-dashboard') {
-          window.location.href = returnUrl
-        } else if (data.user.role === 'school_manager') {
+        if (data.user && data.user.isEmailVerified === false) {
+          window.location.href = '/verify-email'
+        } else if (data.user && data.user.role === 'school_manager') {
           window.location.href = '/school-manager'
+        } else if (returnUrl && returnUrl !== '/' && returnUrl !== '/login' && returnUrl !== '/register') {
+          // For all other users, return to the page they were on before login
+          window.location.href = returnUrl
         } else {
+          // Only use parent-dashboard as fallback for regular users
           window.location.href = '/parent-dashboard'
         }
       } else {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Login failed')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Login failed. Please check your credentials and try again.')
       }
     } catch (error) {
       throw error
@@ -137,25 +150,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json()
+        
+        // Validate response data structure
+        if (!data || !data.access_token) {
+          throw new Error('Invalid response from server - missing access token')
+        }
+        
+        // Additional validation for user object
+        if (!data.user) {
+          console.warn('Registration response missing user object, setting to null')
+        }
+        
         setToken(data.access_token)
-        setUser(data.user)
+        setUser(data.user || null)
         localStorage.setItem('access_token', data.access_token)
         clearReturnUrl()
 
-        // Navigate to return URL or based on user role
+        // Navigate to return URL or based on user role with safe checks
         const returnUrl = getReturnUrl()
-        if (returnUrl && returnUrl !== '/parent-dashboard') {
-          window.location.href = returnUrl
-        } else if (data.user.role === 'school_manager') {
+        if (data.user && data.user.role === 'school_manager') {
           window.location.href = '/school-manager'
+        } else if (returnUrl && returnUrl !== '/' && returnUrl !== '/login' && returnUrl !== '/register') {
+          // For all other users, return to the page they were on before login
+          window.location.href = returnUrl
         } else {
+          // Only use parent-dashboard as fallback for regular users
           window.location.href = '/parent-dashboard'
         }
       } else {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Registration failed')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.message || 
+          'Registration failed. ' + 
+          (response.status === 400 ? 'Please check your information and try again.' : 
+           response.status === 409 ? 'An account with this email already exists.' :
+           'Please try again later.')
+        )
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Enhanced error handling for network issues
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection and try again')
+      }
       throw error
     } finally {
       setIsLoading(false)
@@ -165,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyEmail = async (otp: string) => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -182,18 +218,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Navigate to return URL or based on user role
         const returnUrl = getReturnUrl()
-        if (returnUrl && returnUrl !== '/parent-dashboard') {
-          window.location.href = returnUrl
-        } else if (data.user.role === 'school_manager') {
+        if (data.user && data.user.role === 'school_manager') {
           window.location.href = '/school-manager'
+        } else if (returnUrl && returnUrl !== '/' && returnUrl !== '/login' && returnUrl !== '/register') {
+          // For all other users, return to the page they were on before login
+          window.location.href = returnUrl
         } else {
+          // Only use parent-dashboard as fallback for regular users
           window.location.href = '/parent-dashboard'
         }
       } else {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Verification failed')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.message || 
+          (response.status === 400 ? 'Invalid or expired verification code. Please try again.' :
+           'Email verification failed. Please try again.')
+        )
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection and try again')
+      }
       throw error
     } finally {
       setIsLoading(false)
@@ -212,10 +257,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Password reset failed')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.message || 
+          (response.status === 400 ? 'Invalid or expired verification code.' :
+           response.status === 404 ? 'No account found with this email address.' :
+           'Failed to reset password. Please try again.')
+        )
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection and try again')
+      }
       throw error
     } finally {
       setIsLoading(false)
@@ -225,7 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const generateOtp = async (email: string) => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/generate-otp`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -234,10 +287,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to generate OTP')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.message || 
+          (response.status === 404 ? 'No account found with this email address.' :
+           'Failed to send verification code. Please try again.')
+        )
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection and try again')
+      }
       throw error
     } finally {
       setIsLoading(false)
@@ -249,7 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null)
     localStorage.removeItem('access_token')
     clearReturnUrl()
-    window.location.href = '/'
+    window.location.reload()
   }
 
   return (

@@ -16,8 +16,10 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login")
-      } else if (requiredRole && user.role !== requiredRole) {
+        // Get current path for redirect after login
+        const currentPath = window.location.pathname + window.location.search
+        router.push(`/login?returnUrl=${encodeURIComponent(currentPath)}`)
+      } else if (requiredRole && user && user.role !== requiredRole) {
         router.push("/")
       }
     }
@@ -36,7 +38,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   }
 
   // If not authenticated or doesn't have required role, don't render children (redirect will happen in useEffect)
-  if (!user || (requiredRole && user.role !== requiredRole)) {
+  if (!user || (requiredRole && user && user.role !== requiredRole)) {
     return null
   }
 

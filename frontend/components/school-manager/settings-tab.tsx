@@ -97,8 +97,29 @@ export default function SettingsTab() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [editingMethod, setEditingMethod] = useState<typeof paymentMethods[0] | null>(null)
 
-  const handleSchoolInfoUpdate = () => {
-    alert("School information updated successfully!")
+  const handleSchoolInfoUpdate = async () => {
+    try {
+      // TODO: Replace with actual API call when backend endpoint is available
+      // await updateSchoolInfo(schoolInfo)
+      
+      // Validate required fields
+      if (!schoolInfo.name.trim() || !schoolInfo.email.trim() || !schoolInfo.phone.trim()) {
+        alert("Please fill in all required fields!")
+        return
+      }
+      
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(schoolInfo.email)) {
+        alert("Please enter a valid email address!")
+        return
+      }
+      
+      alert("School information updated successfully!")
+    } catch (error) {
+      console.error("Error updating school info:", error)
+      alert("Failed to update school information. Please try again.")
+    }
   }
 
   const handleAccountUpdate = () => {
@@ -150,20 +171,34 @@ export default function SettingsTab() {
             <form className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">School Name</label>
-                <Input defaultValue="Kigali Primary School" className="rounded-full" />
+                <Input 
+                  value={schoolInfo.name}
+                  onChange={(e) => setSchoolInfo(prev => ({ ...prev, name: e.target.value }))}
+                  className="rounded-full" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
-                <Input type="email" defaultValue="admin@kigaliprimary.edu.rw" className="rounded-full" />
+                <Input 
+                  type="email" 
+                  value={schoolInfo.email}
+                  onChange={(e) => setSchoolInfo(prev => ({ ...prev, email: e.target.value }))}
+                  className="rounded-full" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <Input defaultValue="+250 788 000 000" className="rounded-full" />
+                <Input 
+                  value={schoolInfo.phone}
+                  onChange={(e) => setSchoolInfo(prev => ({ ...prev, phone: e.target.value }))}
+                  className="rounded-full" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">School Address</label>
                 <textarea
-                  defaultValue="KG 123 St, Kigali, Rwanda"
+                  value={schoolInfo.address}
+                  onChange={(e) => setSchoolInfo(prev => ({ ...prev, address: e.target.value }))}
                   rows={3}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2"
                 />
@@ -180,19 +215,41 @@ export default function SettingsTab() {
             <form className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Manager Name</label>
-                <Input defaultValue="School Administrator" className="rounded-full" />
+                <Input 
+                  value={accountInfo.name}
+                  onChange={(e) => setAccountInfo(prev => ({ ...prev, name: e.target.value }))}
+                  className="rounded-full" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                <Input type="password" placeholder="Enter current password" className="rounded-full" />
+                <Input 
+                  type="password" 
+                  value={accountInfo.currentPassword}
+                  onChange={(e) => setAccountInfo(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  placeholder="Enter current password" 
+                  className="rounded-full" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                <Input type="password" placeholder="Enter new password" className="rounded-full" />
+                <Input 
+                  type="password" 
+                  value={accountInfo.newPassword}
+                  onChange={(e) => setAccountInfo(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="Enter new password" 
+                  className="rounded-full" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                <Input type="password" placeholder="Confirm new password" className="rounded-full" />
+                <Input 
+                  type="password" 
+                  value={accountInfo.confirmPassword}
+                  onChange={(e) => setAccountInfo(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="Confirm new password" 
+                  className="rounded-full" 
+                />
               </div>
               <Button onClick={handleAccountUpdate} className="rounded-full bg-blue-700 hover:bg-blue-800">Update Account</Button>
             </form>

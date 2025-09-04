@@ -57,7 +57,7 @@ export default function PendingOrdersTab({ pendingOrders }: PendingOrdersTabProp
                         : "bg-blue-100 text-blue-800"
                     }
                   >
-                    {order.status === "processing" ? "Processing" : "Shipped"}
+                    {order.status === "processing" ? "Processing" : "Delivered"}
                   </Badge>
                   <Button variant="outline" size="sm" className="mt-2 rounded-full bg-transparent">
                     <Eye className="h-3 w-3 mr-1" />

@@ -272,6 +272,12 @@ export class OrdersService {
     let emailSent = false;
 
     try {
+      // Safely extract parent name with comprehensive null checking
+      // Handle both nested parentInfo structure and flat structure from frontend
+      const parentName = orderData?.parentInfo?.firstName || 
+                        (orderData?.parentName && typeof orderData.parentName === 'string' ? 
+                         orderData.parentName.split(' ')[0] : 'Valued Customer');
+      
       // Send email notification
       const emailHtml = `
         <!DOCTYPE html>
@@ -295,21 +301,21 @@ export class OrdersService {
                 <p>Order Confirmation</p>
               </div>
               <div class="content">
-                <h2>Hello ${orderData.parentInfo.firstName}!</h2>
+                <h2>Hello ${parentName}!</h2>
                 <p>Thank you for your order! Your order has been successfully placed and is being processed.</p>
 
                 <div class="order-details">
                   <h3>Order Details</h3>
-                  <p><strong>Order ID:</strong> ${orderData.id || 'Processing'}</p>
-                  <p><strong>Student:</strong> ${orderData.studentInfo.name} (${orderData.studentInfo.class})</p>
-                  <p><strong>Total Amount:</strong> RWF ${orderData.totalAmount.toLocaleString()}</p>
-                  <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
+                  <p><strong>Order ID:</strong> ${orderData?.id || 'Processing'}</p>
+                  <p><strong>Student:</strong> ${orderData?.studentInfo?.name || 'Student'} (${orderData?.studentInfo?.class || 'N/A'})</p>
+                  <p><strong>Total Amount:</strong> RWF ${orderData?.totalAmount?.toLocaleString() || '0'}</p>
+                  <p><strong>Payment Method:</strong> ${orderData?.paymentMethod || 'N/A'}</p>
 
                   <h4>Items Ordered:</h4>
                   <ul>
-                    ${orderData.cartItems.map((item: any) =>
-                      `<li>${item.productName} (Qty: ${item.quantity}) - RWF ${(item.price * item.quantity).toLocaleString()}</li>`
-                    ).join('')}
+                    ${Array.isArray(orderData?.cartItems) ? orderData.cartItems.map((item: any) =>
+                      `<li>${item?.productName || 'Product'} (Qty: ${item?.quantity || 0}) - RWF ${((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</li>`
+                    ).join('') : '<li>No items found</li>'}
                   </ul>
                 </div>
 
@@ -329,48 +335,60 @@ export class OrdersService {
       `;
 
       const emailText = `
-        Hello ${orderData.parentInfo.firstName}!
+        Hello ${parentName}!
 
         Thank you for your order! Your order has been successfully placed and is being processed.
 
         Order Details:
-        Order ID: ${orderData.id || 'Processing'}
-        Student: ${orderData.studentInfo.name} (${orderData.studentInfo.class})
-        Total Amount: RWF ${orderData.totalAmount.toLocaleString()}
-        Payment Method: ${orderData.paymentMethod}
+        Order ID: ${orderData?.id || 'Processing'}
+        Student: ${orderData?.studentInfo?.name || 'Student'} (${orderData?.studentInfo?.class || 'N/A'})
+        Total Amount: RWF ${orderData?.totalAmount?.toLocaleString() || '0'}
+        Payment Method: ${orderData?.paymentMethod || 'N/A'}
 
         Items Ordered:
-        ${orderData.cartItems.map((item: any) =>
-          `- ${item.productName} (Qty: ${item.quantity}) - RWF ${(item.price * item.quantity).toLocaleString()}`
-        ).join('\n')}
+${Array.isArray(orderData?.cartItems) ? orderData.cartItems.map((item: any) =>
+  `- ${item?.productName || 'Product'} (Qty: ${item?.quantity || 0}) - RWF ${((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}`
+).join('\n') : 'No items found'}
 
         You will receive payment instructions via SMS shortly. Please complete your payment to confirm your order.
 
-        If you have any questions, please contact us at ${orderData.schoolInfo?.email || 'support@schoolmart.rw'} or call ${orderData.schoolInfo?.phone || '+250 788 123 456'}.
+        If you have any questions, please contact us at ${orderData?.schoolInfo?.email || 'support@schoolmart.rw'} or call ${orderData?.schoolInfo?.phone || '+250 788 123 456'}.
 
         Best regards,
         The SchoolMart Team
       `;
 
-      emailSent = await this.emailService.sendEmail({
-        to: orderData.parentInfo.email,
-        subject: 'Order Confirmation - SchoolMart',
-        html: emailHtml,
-        text: emailText,
-      });
+      const emailTo = orderData?.parentInfo?.email || orderData?.parentEmail || '';
+      if (emailTo) {
+        emailSent = await this.emailService.sendEmail({
+          to: emailTo,
+          subject: 'Order Confirmation - SchoolMart',
+          html: emailHtml,
+          text: emailText,
+        });
+      } else {
+        console.warn('No email address provided for order confirmation');
+      }
 
     } catch (emailError) {
       console.error('Failed to send order confirmation email:', emailError);
     }
 
     try {
-      // Send SMS notification
-      const smsMessage = `Hello ${orderData.parentInfo.firstName}! Your SchoolMart order #${orderData.id || 'Processing'} for RWF ${orderData.totalAmount.toLocaleString()} has been placed. Payment instructions will follow. Thank you!`;
+      // Safely extract parent info from flat structure
+      const parentFirstName = orderData?.parentName ? orderData.parentName.split(' ')[0] : 'Valued';
+      const parentFullName = orderData?.parentName || `${parentFirstName} Customer`;
+      const smsMessage = `Hello ${parentFullName}! Your SchoolMart order #${orderData?.id || 'Processing'} for RWF ${orderData?.totalAmount?.toLocaleString() || '0'} has been placed. Payment instructions will follow. Thank you!`;
 
-      smsSent = await this.smsService.sendSMS({
-        to: orderData.parentInfo.phone,
-        message: smsMessage,
-      });
+      const smsTo = orderData?.parentPhone || '';
+      if (smsTo) {
+        smsSent = await this.smsService.sendSMS({
+          to: smsTo,
+          message: smsMessage,
+        });
+      } else {
+        console.warn('No phone number provided for SMS notification');
+      }
 
     } catch (smsError) {
       console.error('Failed to send order confirmation SMS:', smsError);

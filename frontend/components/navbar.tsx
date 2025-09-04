@@ -7,12 +7,14 @@ import { ShoppingCart, Search, User, Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth-context";
 import { getCartTotal } from "@/lib/api";
+import { useCart } from "@/lib/cart-context";
 import { Product } from "@/lib/api";
 
 export default function Navbar() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const [cartCount, setCartCount] = useState(0);
+  const { cartCount } = useCart();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -22,23 +24,6 @@ export default function Navbar() {
     const accessToken = localStorage.getItem('access_token');
     setToken(accessToken);
   }, []);
-
-  useEffect(() => {
-    const loadCartCount = async () => {
-      if (!token) {
-        setCartCount(0);
-        return;
-      }
-      try {
-        const cartTotal = await getCartTotal(token);
-        setCartCount(cartTotal.totalItems);
-      } catch (err) {
-        console.error("Error fetching cart count:", err);
-        setCartCount(0);
-      }
-    };
-    loadCartCount();
-  }, [token]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -74,7 +59,7 @@ export default function Navbar() {
                 <div className="flex flex-col space-y-4 mt-8">
                   {token ? (
                     <a
-                      href="/parent-dashboard"
+                      href={user?.role === 'school_manager' ? '/school-manager' : '/parent-dashboard'}
                       className="text-gray-700 hover:text-blue-700 font-medium transition-colors py-2 px-4 rounded-md hover:bg-blue-50 md:hidden"
                     >
                       Dashboard
@@ -251,7 +236,7 @@ export default function Navbar() {
             {token ? (
               <Button
                 className="rounded-full bg-blue-500 hover:bg-blue-600 btn-enhanced"
-                onClick={() => (window.location.href = "/parent-dashboard")}
+                onClick={() => (window.location.href = user?.role === 'school_manager' ? '/school-manager' : '/parent-dashboard')}
               >
                 Dashboard
               </Button>

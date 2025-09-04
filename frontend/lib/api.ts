@@ -67,7 +67,7 @@ export interface SalesAnalytics {
 
 // Frontend Product Management
 export interface Product {
-  id: number
+  id: string
   name: string
   price: string
   image: string
@@ -82,7 +82,7 @@ export interface Product {
 // Cart Management
 export interface CartItem {
   id: string
-  productId: number
+  productId: string
   name: string
   price: number
   quantity: number
@@ -291,33 +291,7 @@ export async function fetchProducts(): Promise<Product[]> {
     }));
   } catch (error) {
     console.error('Error fetching products:', error);
-    // Return mock data as fallback
-    return [
-      {
-        id: 1,
-        name: "School Notebook",
-        price: "1500",
-        image: "/placeholder.jpg",
-        required: true,
-        description: "Standard school notebook",
-        rating: 4.5,
-        reviews: 12,
-        inStock: true,
-        category: "Stationery"
-      },
-      {
-        id: 2,
-        name: "Math Textbook",
-        price: "5000",
-        image: "/placeholder.jpg",
-        required: true,
-        description: "Mathematics textbook for grade 7",
-        rating: 4.2,
-        reviews: 8,
-        inStock: true,
-        category: "Books"
-      }
-    ];
+    throw error;
   }
 }
 
@@ -342,19 +316,7 @@ export async function fetchProduct(id: string): Promise<Product> {
     };
   } catch (error) {
     console.error('Error fetching product:', error);
-    // Return mock data as fallback
-    return {
-      id: parseInt(id),
-      name: "Sample Product",
-      price: "2500",
-      image: "/placeholder.jpg",
-      required: false,
-      description: "Sample product description",
-      rating: 4.0,
-      reviews: 5,
-      inStock: true,
-      category: "Stationery"
-    };
+    throw error;
   }
 }
 
@@ -371,141 +333,123 @@ export async function fetchFeaturedProducts(): Promise<Product[]> {
 
 // Categories Management
 export async function fetchCategories(): Promise<Category[]> {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch categories');
-    }
-    const categories = await response.json();
-    return categories.map((category: any) => ({
-      id: category.id,
-      name: category.name,
-      image: category.imageUrl || '/placeholder.jpg',
-    }));
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    // Return mock data as fallback
-    const mockCategories: Category[] = [
-      {
-        id: "1",
-        name: "Stationery",
-        image: "/categories/stationery.jpg"
-      },
-      {
-        id: "2",
-        name: "Books",
-        image: "/categories/books.jpg"
-      },
-      {
-        id: "3",
-        name: "Uniforms",
-        image: "/categories/uniforms.jpg"
-      },
-      {
-        id: "4",
-        name: "Sports Equipment",
-        image: "/categories/sports.jpg"
-      },
-      {
-        id: "5",
-        name: "Art Supplies",
-        image: "/categories/art.jpg"
-      },
-      {
-        id: "6",
-        name: "Electronics",
-        image: "/categories/electronics.jpg"
-      }
-    ];
-    return mockCategories;
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch categories');
   }
+  const categories = await response.json();
+  return categories.map((category: any) => ({
+    id: category.id,
+    name: category.name,
+    image: category.imageUrl || '/placeholder.jpg',
+  }));
 }
 
 export async function fetchProductsByCategory(categoryName: string): Promise<SchoolManagerProduct[]> {
   try {
-    // For now, filter products by category from the existing products
-    // TODO: Replace with actual API call when backend supports category filtering
-    const allProducts = await fetchSchoolProducts('');
-    return allProducts.filter(product =>
-      product.category.toLowerCase() === categoryName.toLowerCase()
-    )
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/category/${encodeURIComponent(categoryName)}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch products by category');
+    }
+    const products = await response.json();
+    return products.map((product: any) => ({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      stock: product.stock,
+      minStock: product.minStock,
+      required: product.required,
+      description: product.description,
+      supplier: product.supplier,
+      lastUpdated: product.updatedAt || product.lastUpdated,
+      imageUrl: product.imageUrl || product.image,
+    }));
   } catch (error) {
-    console.error('Error fetching products by category:', error)
-    throw error
+    console.error('Error fetching products by category:', error);
+    throw error;
   }
 }
 
 // Cart Management
 export async function getCartTotal(token: string): Promise<CartTotal> {
-  try {
-    if (!token) {
-      return { totalItems: 0, totalAmount: 0 };
-    }
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/total`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch cart total');
-    }
-    const data = await response.json();
-    return {
-      totalItems: data.totalItems || 0,
-      totalAmount: data.totalAmount || 0,
-    };
-  } catch (error) {
-    console.error('Error fetching cart total:', error);
-    // Return mock data as fallback
+  if (!token) {
     return { totalItems: 0, totalAmount: 0 };
   }
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/total`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch cart total');
+  }
+  const data = await response.json();
+  return {
+    totalItems: data.totalItems || 0,
+    totalAmount: data.totalAmount || 0,
+  };
 }
 
 export async function fetchCartItems(token: string): Promise<CartItem[]> {
-  try {
-    if (!token) {
-      return [];
-    }
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch cart items');
-    }
-    const items = await response.json();
-    return items.map((item: any) => ({
-      id: item.id,
-      productId: item.productId,
-      name: item.productName || item.name,
-      price: item.price,
-      quantity: item.quantity,
-      image: item.imageUrl || '/placeholder.jpg',
-      category: item.category,
-    }));
-  } catch (error) {
-    console.error('Error fetching cart items:', error);
-    // Return mock data as fallback
+  if (!token) {
+    console.log('No token provided, returning empty cart');
     return [];
   }
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/items`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to fetch cart items');
+  }
+  
+  const data = await response.json();
+  
+  // Handle both array and object responses
+  const items = Array.isArray(data) ? data : (data.items || []);
+  
+  return items.map((item: any) => ({
+    id: item.id || item._id,
+    productId: item.productId || (item.product ? item.product.id : ''),
+    name: item.productName || item.product?.name || item.name || 'Unknown Product',
+    price: item.price || 0,
+    quantity: item.quantity || 1,
+    image: item.imageUrl || item.product?.imageUrl || item.image || '/placeholder.jpg',
+    category: item.category || item.product?.category || 'Uncategorized',
+  }));
 }
 
-export async function addToCart(token: string, productId: number, quantity: number = 1): Promise<void> {
+export async function addToCart(token: string, productId: string, quantity: number = 1): Promise<void> {
   try {
     if (!token) {
       throw new Error('Authentication required');
     }
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart`, {
+    
+    if (!productId || productId === 'NaN' || productId.trim() === '') {
+      throw new Error('Invalid product ID provided');
+    }
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/items`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ productId, quantity }),
+      body: JSON.stringify({ 
+        productId: productId,
+        quantity 
+      }),
     });
+
     if (!response.ok) {
-      throw new Error('Failed to add item to cart');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to add item to cart');
     }
   } catch (error) {
     console.error('Error adding to cart:', error);
@@ -513,12 +457,24 @@ export async function addToCart(token: string, productId: number, quantity: numb
   }
 }
 
-export async function updateCartItem(token: string, itemId: string, quantity: number): Promise<void> {
+export const updateCartItem = async (token: string, itemId: string, quantity: number): Promise<void> => {
   try {
     if (!token) {
       throw new Error('Authentication required');
     }
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/${itemId}`, {
+    
+    if (!itemId) {
+      throw new Error('Item ID is required');
+    }
+    
+    if (typeof quantity !== 'number' || quantity < 1) {
+      throw new Error('Invalid quantity');
+    }
+    
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/cart/items/${itemId}`;
+    console.log('Updating cart item:', { url, itemId, quantity });
+    
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -526,11 +482,25 @@ export async function updateCartItem(token: string, itemId: string, quantity: nu
       },
       body: JSON.stringify({ quantity }),
     });
+    
     if (!response.ok) {
-      throw new Error('Failed to update cart item');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      throw new Error(errorData.message || 'Failed to update cart item');
     }
+    
+    return await response.json();
   } catch (error) {
-    console.error('Error updating cart item:', error);
+    console.error('Error in updateCartItem:', {
+      error,
+      itemId,
+      quantity,
+      hasToken: !!token
+    });
     throw error;
   }
 }
@@ -540,7 +510,7 @@ export async function removeFromCart(token: string, itemId: string): Promise<voi
     if (!token) {
       throw new Error('Authentication required');
     }
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/${itemId}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/items/${itemId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -572,22 +542,22 @@ export async function fetchSchoolOrders(token: string): Promise<SchoolManagerOrd
     const orders = await response.json();
     return orders.map((order: any) => ({
       id: order.id,
-      parentName: order.parentName,
-      parentEmail: order.parentEmail,
-      parentPhone: order.parentPhone,
+      parentName: order.parentName || `${order.user?.firstName || ''} ${order.user?.lastName || ''}`.trim(),
+      parentEmail: order.parentEmail || order.user?.email,
+      parentPhone: order.parentPhone || order.user?.phone,
       studentName: order.studentName,
       studentGrade: order.studentGrade,
       studentClass: order.studentClass,
-      items: order.items.map((item: any) => ({
-        name: item.productName || item.name,
+      items: order.items?.map((item: any) => ({
+        productId: item.productId,
+        productName: item.productName || item.product?.name,
         quantity: item.quantity,
         price: item.price,
-        category: item.category,
-        productId: item.productId,
-      })),
+        category: item.category || item.product?.category,
+      })) || [],
       totalAmount: order.totalAmount,
       status: order.status,
-      orderDate: order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : order.orderDate,
+      orderDate: order.orderDate || order.createdAt,
       paymentMethod: order.paymentMethod,
       deliveryAddress: order.deliveryAddress,
       createdAt: order.createdAt,
@@ -615,22 +585,22 @@ export async function updateOrderStatus(token: string, orderId: string, status: 
     const order = await response.json();
     return {
       id: order.id,
-      parentName: order.parentName,
-      parentEmail: order.parentEmail,
-      parentPhone: order.parentPhone,
+      parentName: order.parentName || `${order.user?.firstName || ''} ${order.user?.lastName || ''}`.trim(),
+      parentEmail: order.parentEmail || order.user?.email,
+      parentPhone: order.parentPhone || order.user?.phone,
       studentName: order.studentName,
       studentGrade: order.studentGrade,
       studentClass: order.studentClass,
-      items: order.items.map((item: any) => ({
-        name: item.productName || item.name,
+      items: order.items?.map((item: any) => ({
+        productId: item.productId,
+        productName: item.productName || item.product?.name,
         quantity: item.quantity,
         price: item.price,
-        category: item.category,
-        productId: item.productId,
-      })),
+        category: item.category || item.product?.category,
+      })) || [],
       totalAmount: order.totalAmount,
       status: order.status,
-      orderDate: order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : order.orderDate,
+      orderDate: order.orderDate || order.createdAt,
       paymentMethod: order.paymentMethod,
       deliveryAddress: order.deliveryAddress,
       createdAt: order.createdAt,
@@ -653,34 +623,35 @@ export async function bulkUpdateOrderStatus(token: string, orderIds: string[], s
       body: JSON.stringify({ orderIds, status }),
     });
     if (!response.ok) {
-      throw new Error('Failed to bulk update order statuses');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to bulk update order status');
     }
     const orders = await response.json();
     return orders.map((order: any) => ({
       id: order.id,
-      parentName: order.parentName,
-      parentEmail: order.parentEmail,
-      parentPhone: order.parentPhone,
+      parentName: order.parentName || `${order.user?.firstName || ''} ${order.user?.lastName || ''}`.trim(),
+      parentEmail: order.parentEmail || order.user?.email,
+      parentPhone: order.parentPhone || order.user?.phone,
       studentName: order.studentName,
       studentGrade: order.studentGrade,
       studentClass: order.studentClass,
-      items: order.items.map((item: any) => ({
-        name: item.productName || item.name,
+      items: order.items?.map((item: any) => ({
+        productId: item.productId,
+        productName: item.productName || item.product?.name,
         quantity: item.quantity,
         price: item.price,
-        category: item.category,
-        productId: item.productId,
-      })),
+        category: item.category || item.product?.category,
+      })) || [],
       totalAmount: order.totalAmount,
       status: order.status,
-      orderDate: order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : order.orderDate,
+      orderDate: order.orderDate || order.createdAt,
       paymentMethod: order.paymentMethod,
       deliveryAddress: order.deliveryAddress,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     }));
   } catch (error) {
-    console.error('Error bulk updating order statuses:', error);
+    console.error('Error in bulk update order status:', error);
     throw error;
   }
 }
@@ -693,7 +664,8 @@ export async function fetchOrderStats(token: string): Promise<OrderStats> {
       },
     });
     if (!response.ok) {
-      throw new Error('Failed to fetch order stats');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to fetch order stats');
     }
     const stats = await response.json();
 
@@ -707,7 +679,7 @@ export async function fetchOrderStats(token: string): Promise<OrderStats> {
       throw new Error('Failed to fetch all orders for average order value');
     }
     const allOrders = await allOrdersResponse.json();
-    const totalAmountAllOrders = allOrders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+    const totalAmountAllOrders = allOrders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
     const averageOrderValue = allOrders.length > 0 ? totalAmountAllOrders / allOrders.length : 0;
 
     return {
@@ -738,7 +710,7 @@ export async function fetchCustomers(token: string): Promise<CustomerData[]> {
     const customersWithStats = await Promise.all(
       users.map(async (user: any) => {
         try {
-          const ordersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/user/${user.id}`, {
+          const ordersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/user/${user?.id}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -752,22 +724,22 @@ export async function fetchCustomers(token: string): Promise<CustomerData[]> {
             : null;
 
           return {
-            id: user.id,
-            name: `${user.firstName} ${user.lastName}`,
-            email: user.email,
-            phone: user.phone || '',
+            id: user?.id,
+            name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown User',
+            email: user?.email || '',
+            phone: user?.phone || '',
             totalOrders: userOrders.length,
             totalSpent: totalSpent,
             lastOrderDate: lastOrderDate ? new Date(lastOrderDate).toISOString().split('T')[0] : '',
             students: students,
           };
         } catch (error) {
-          console.error(`Error fetching orders for user ${user.id}:`, error);
+          console.error(`Error fetching orders for user ${user?.id}:`, error);
           return {
-            id: user.id,
-            name: `${user.firstName} ${user.lastName}`,
-            email: user.email,
-            phone: user.phone || '',
+            id: user?.id,
+            name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown User',
+            email: user?.email || '',
+            phone: user?.phone || '',
             totalOrders: 0,
             totalSpent: 0,
             lastOrderDate: '',
@@ -930,7 +902,8 @@ export async function fetchParentOrders(token: string): Promise<ParentOrder[]> {
       },
     });
     if (!response.ok) {
-      throw new Error('Failed to fetch parent orders');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to fetch parent orders');
     }
     const orders = await response.json();
     return orders.map((order: any) => ({
@@ -951,7 +924,8 @@ export async function fetchParentOrderStats(token: string): Promise<ParentOrderS
       },
     });
     if (!response.ok) {
-      throw new Error('Failed to fetch parent order stats');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to fetch parent order stats');
     }
     return await response.json();
   } catch (error) {
@@ -968,12 +942,21 @@ export async function fetchParentNotifications(token: string, limit: number = 20
         'Authorization': `Bearer ${token}`,
       },
     });
+    
     if (!response.ok) {
-      throw new Error('Failed to fetch parent notifications');
+      throw new Error('Failed to fetch notifications');
     }
-    return await response.json();
+    
+    const notifications = await response.json();
+    
+    // Ensure all notifications have valid string IDs
+    return notifications.map((notification: any) => ({
+      ...notification,
+      id: String(notification.id), // Ensure ID is a string
+      isRead: Boolean(notification.isRead), // Ensure isRead is a boolean
+    }));
   } catch (error) {
-    console.error('Error fetching parent notifications:', error);
+    console.error('Error fetching notifications:', error);
     throw error;
   }
 }
@@ -991,6 +974,43 @@ export async function markParentNotificationAsRead(token: string, notificationId
     }
   } catch (error) {
     console.error('Error marking notification as read:', error);
+    throw error;
+  }
+}
+
+export async function markAllParentNotificationsAsRead(token: string): Promise<void> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/mark-all-read`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to mark all notifications as read');
+    }
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    throw error;
+  }
+}
+
+export async function deleteParentNotification(id: string, token: string): Promise<void> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/delete`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to delete notification');
+    }
+  } catch (error) {
+    console.error('Error deleting notification:', error);
     throw error;
   }
 }
@@ -1102,29 +1122,62 @@ export async function fetchSalesAnalytics(token: string, forceRefresh: boolean =
     ];
 
     // Product purchases by term (count of items purchased, from all orders)
-    const productPurchasesByTerm = [
-      { term: 'Term 1 (Sep-Dec)', purchases: orders
+    // Only show data for current and past terms based on current date
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+    const currentYear = currentDate.getFullYear();
+    
+    const productPurchasesByTerm = [];
+    
+    // Term 1 (Sep-Dec) - always show if we're in or past Term 1
+    if (currentMonth >= 9 || currentMonth <= 12) {
+      productPurchasesByTerm.push({
+        term: 'Term 1 (Sep-Dec)',
+        purchases: orders
           .filter((order: SchoolManagerOrder) => {
-            const month = new Date(order.orderDate).getMonth() + 1;
-            return month >= 9 && month <= 12;
+            const orderDate = new Date(order.orderDate);
+            const month = orderDate.getMonth() + 1;
+            const year = orderDate.getFullYear();
+            // For current year: Sep-Dec, for previous year: only if we're in Jan-Aug of next year
+            return (year === currentYear && month >= 9 && month <= 12) ||
+                   (year === currentYear - 1 && month >= 9 && month <= 12 && currentMonth <= 8);
           })
           .flatMap((order: SchoolManagerOrder) => order.items)
-          .reduce((sum: number, item: any) => sum + item.quantity, 0) },
-      { term: 'Term 2 (Jan-Mar)', purchases: orders
+          .reduce((sum: number, item: any) => sum + item.quantity, 0)
+      });
+    }
+    
+    // Term 2 (Jan-Mar) - only show if we're in or past Term 2
+    if (currentMonth >= 1 && currentMonth <= 12) {
+      productPurchasesByTerm.push({
+        term: 'Term 2 (Jan-Mar)',
+        purchases: orders
           .filter((order: SchoolManagerOrder) => {
-            const month = new Date(order.orderDate).getMonth() + 1;
-            return month >= 1 && month <= 3;
+            const orderDate = new Date(order.orderDate);
+            const month = orderDate.getMonth() + 1;
+            const year = orderDate.getFullYear();
+            return year === currentYear && month >= 1 && month <= 3;
           })
           .flatMap((order: SchoolManagerOrder) => order.items)
-          .reduce((sum: number, item: any) => sum + item.quantity, 0) },
-      { term: 'Term 3 (Apr-Jun)', purchases: orders
+          .reduce((sum: number, item: any) => sum + item.quantity, 0)
+      });
+    }
+    
+    // Term 3 (Apr-Jun) - only show if we're in or past Term 3
+    if (currentMonth >= 4) {
+      productPurchasesByTerm.push({
+        term: 'Term 3 (Apr-Jun)',
+        purchases: orders
           .filter((order: SchoolManagerOrder) => {
-            const month = new Date(order.orderDate).getMonth() + 1;
-            return month >= 4 && month <= 6;
+            const orderDate = new Date(order.orderDate);
+            const month = orderDate.getMonth() + 1;
+            const year = orderDate.getFullYear();
+            return year === currentYear && month >= 4 && month <= 6;
           })
           .flatMap((order: SchoolManagerOrder) => order.items)
-          .reduce((sum: number, item: any) => sum + item.quantity, 0) },
-    ];
+          .reduce((sum: number, item: any) => sum + item.quantity, 0)
+      });
+    }
 
     const result = {
       monthlyRevenue: monthlyRevenueArray,
@@ -1170,8 +1223,8 @@ export interface SchoolInfo {
 
 export interface OrderResult {
   success: boolean
-  orderId: string
-  message?: string
+  orderId?: string
+  message: string
 }
 
 // Fetch user profile for checkout
@@ -1194,25 +1247,11 @@ export async function fetchUserProfile(token: string): Promise<UserProfile> {
 
 // Fetch school information
 export async function fetchSchoolInfo(): Promise<SchoolInfo> {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/school/info`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch school info');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching school info:', error);
-    // Return mock data as fallback
-    return {
-      id: '1',
-      name: 'SchoolMart Demo School',
-      address: 'Kigali, Rwanda',
-      phone: '+250 788 123 456',
-      email: 'info@schoolmart.rw',
-      momoCode: '123435',
-      logoUrl: '/school-logo.png'
-    };
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/school/info`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch school info');
   }
+  return await response.json();
 }
 
 // Submit order
@@ -1226,25 +1265,32 @@ export async function submitOrder(token: string, orderData: any): Promise<OrderR
       },
       body: JSON.stringify(orderData),
     });
+
     if (!response.ok) {
-      throw new Error('Failed to submit order');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to submit order');
     }
+
     const result = await response.json();
     return {
       success: true,
-      orderId: result.id || `ORD-${Date.now()}`,
-      message: 'Order submitted successfully'
+      orderId: result.id,
+      message: 'Order submitted successfully',
     };
   } catch (error) {
     console.error('Error submitting order:', error);
-    throw error;
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to submit order',
+    };
   }
 }
 
-// Send order notifications (SMS and email)
+// Send order notifications (SMS and email) and clear cart
 export async function sendOrderNotifications(token: string, orderData: any): Promise<void> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/send-notifications`, {
+    // Send order notifications
+    const notificationResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/notifications`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1252,26 +1298,22 @@ export async function sendOrderNotifications(token: string, orderData: any): Pro
       },
       body: JSON.stringify(orderData),
     });
-    if (!response.ok) {
-      throw new Error('Failed to send notifications');
-    }
-  } catch (error) {
-    console.error('Error sending notifications:', error);
-    // Don't throw error as notifications are optional
-  }
-}
 
-// Clear cart after successful order
-export async function clearCart(token: string): Promise<void> {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/clear`, {
+    if (!notificationResponse.ok) {
+      const errorData = await notificationResponse.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to send order notifications');
+    }
+
+    // Clear the cart after successful order
+    const clearCartResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/clear`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
       },
     });
-    if (!response.ok) {
-      throw new Error('Failed to clear cart');
+    
+    if (!clearCartResponse.ok) {
+      console.warn('Failed to clear cart after order');
     }
   } catch (error) {
     console.error('Error clearing cart:', error);

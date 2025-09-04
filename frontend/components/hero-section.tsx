@@ -42,7 +42,7 @@ export default function HeroSection() {
               <Button
                 size="lg"
                 className="rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-semibold btn-enhanced w-full sm:w-auto"
-                onClick={() => (window.location.href = "/products")}
+                onClick={() => (window.location.href = "/cart")}
               >
                 Buy Now
               </Button>

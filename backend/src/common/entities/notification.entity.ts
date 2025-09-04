@@ -4,7 +4,6 @@ import { User } from './user.entity';
 export enum NotificationType {
   ORDER = 'order',
   PAYMENT = 'payment',
-  SHIPPING = 'shipping',
   GENERAL = 'general'
 }
 

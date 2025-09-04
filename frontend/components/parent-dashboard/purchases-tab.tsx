@@ -45,7 +45,6 @@ export default function PurchasesTab({
             <option value="all">All Orders</option>
             <option value="delivered">Delivered</option>
             <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
           </select>
           <Button
             variant="outline"

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Poppins } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
+import { CartProvider } from "@/lib/cart-context"
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
@@ -42,8 +43,10 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${poppins.variable}`}>
         <AuthProvider>
-          {children}
-          <Toaster />
+          <CartProvider>
+            {children}
+            <Toaster />
+          </CartProvider>
         </AuthProvider>
         <Analytics />
       </body>

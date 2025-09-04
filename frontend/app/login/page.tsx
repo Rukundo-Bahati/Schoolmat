@@ -11,6 +11,7 @@ import { Eye, EyeOff, ArrowLeft, Facebook, Twitter, Instagram } from "lucide-rea
 import { useAuth } from "@/lib/auth-context"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
+// Using built-in alerts instead of react-toastify to avoid dependency issues
 
 export default function LoginPage() {
   const router = useRouter()
@@ -59,7 +60,18 @@ export default function LoginPage() {
       await login(formData.emailOrPhone, formData.password)
       // Navigation is now handled by the auth context
     } catch (error: any) {
-      setErrors({ general: error.message || "Login failed" })
+      const errorMessage = error.message || "Login failed"
+      setErrors({ general: errorMessage })
+      
+      // Check if it's an unverified account error
+      if (errorMessage.toLowerCase().includes('verify') || errorMessage.toLowerCase().includes('unverified')) {
+        alert("Please verify your email account before logging in")
+        setTimeout(() => {
+          router.push(`/verify-email?email=${encodeURIComponent(formData.emailOrPhone)}`)
+        }, 2000)
+      } else {
+        alert(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }

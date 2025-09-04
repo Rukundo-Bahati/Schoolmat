@@ -81,7 +81,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#" className="hover:text-blue-700 transition-colors">
-                  Shipping Info
+                  Delivery Info
                 </a>
               </li>
               <li>

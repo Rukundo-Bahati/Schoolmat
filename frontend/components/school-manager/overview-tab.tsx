@@ -25,7 +25,7 @@ interface Order {
     category: string
   }>
   totalAmount: number
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  status: "pending" | "processing" | "delivered" | "cancelled"
   orderDate: string
   paymentMethod: string
   deliveryAddress: string
@@ -158,7 +158,25 @@ export default function OverviewTab({
                   fill: true,
                 }]
               }}
-              options={chartOptions}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                  x: {
+                    ticks: {
+                      maxRotation: 45,
+                      minRotation: 0
+                    }
+                  }
+                }
+              }}
             />
           )}
         </CardContent>
@@ -182,7 +200,39 @@ export default function OverviewTab({
                 </button>
               </div>
             ) : (
-              <Doughnut data={orderStatusData} options={chartOptions} />
+              <div className="h-64">
+                <Doughnut 
+                  data={orderStatusData} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    layout: {
+                      padding: 20,
+                    },
+                    plugins: {
+                      legend: {
+                        display: true,
+                        position: 'bottom' as const,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context: any) {
+                            let label = context.label || '';
+                            if (label) {
+                              label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                              label += context.parsed + ' orders';
+                            }
+                            return label;
+                          }
+                        }
+                      }
+                    },
+                  }}
+                />
+              </div>
             )}
           </CardContent>
         </Card>
@@ -216,9 +266,7 @@ export default function OverviewTab({
                         ? "bg-yellow-100 text-yellow-800"
                         : order.status === "processing"
                           ? "bg-blue-100 text-blue-800"
-                          : order.status === "shipped"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-green-100 text-green-800"
+                          : "bg-green-100 text-green-800"
                     }
                   >
                     {order.status}

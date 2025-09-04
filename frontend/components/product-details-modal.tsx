@@ -12,7 +12,7 @@ interface ProductDetailsModalProps {
   isOpen: boolean
   onClose: () => void
   onViewPurchase: (product: Product) => void
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (product: Product, quantity: number) => void
 }
 
 export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, onAddToCart }: ProductDetailsModalProps) {
@@ -25,7 +25,7 @@ export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, 
 
   const handleAddToCartClick = () => {
     if (onAddToCart) {
-      onAddToCart(product)
+      onAddToCart(product, 1)
       setShowCelebration(true)
     }
   }

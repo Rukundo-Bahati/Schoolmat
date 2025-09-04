@@ -42,22 +42,6 @@ export default function ProductsPage() {
   const [showCelebration, setShowCelebration] = useState(false)
   const [celebrationProductName, setCelebrationProductName] = useState<string | undefined>(undefined)
 
-  // Helper function to convert SchoolManagerProduct to Product
-  const convertSchoolManagerProductToProduct = (schoolProduct: SchoolManagerProduct): Product => {
-    return {
-      id: parseInt(schoolProduct.id),
-      name: schoolProduct.name,
-      price: schoolProduct.price.toString(),
-      image: schoolProduct.imageUrl || '/placeholder.jpg',
-      required: schoolProduct.required,
-      description: schoolProduct.description,
-      rating: 4.5, // Default rating since SchoolManagerProduct doesn't have this
-      reviews: 0, // Default reviews since SchoolManagerProduct doesn't have this
-      inStock: schoolProduct.stock > 0,
-      category: schoolProduct.category,
-    }
-  }
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -66,16 +50,27 @@ export default function ProductsPage() {
 
         // Fetch categories
         const fetchedCategories = await fetchCategories()
-        if (fetchedCategories) {
-          const categoryNames = ["All", ...fetchedCategories.map((cat: any) => cat.name)]
+        if (fetchedCategories && fetchedCategories.length > 0) {
+          const categoryNames = ["All", ...fetchedCategories.map((cat) => cat.name)]
           setCategories(categoryNames)
 
           // Fetch products
           const category = searchParams.get('category')
           let fetchedProducts: Product[]
-          if (category && categoryNames.includes(category)) {
+          if (category && category !== "All" && categoryNames.includes(category)) {
             const schoolProducts = await fetchProductsByCategory(category)
-            fetchedProducts = schoolProducts.map(convertSchoolManagerProductToProduct)
+            fetchedProducts = schoolProducts.map((product) => ({
+              id: product.id,
+              name: product.name,
+              price: product.price.toString(),
+              image: product.imageUrl || '/placeholder.jpg',
+              required: product.required || false,
+              description: product.description || '',
+              rating: 4.5,
+              reviews: 0,
+              inStock: product.stock > 0,
+              category: product.category,
+            }))
             setSelectedCategory(category)
           } else {
             fetchedProducts = await fetchProducts()
@@ -83,7 +78,9 @@ export default function ProductsPage() {
           setProducts(fetchedProducts)
         } else {
           // Fallback
-          setProducts(await fetchProducts())
+          const fetchedProducts = await fetchProducts()
+          setProducts(fetchedProducts)
+          setCategories(["All"])
         }
       } catch (err) {
         setError('Failed to load data')
@@ -152,7 +149,7 @@ export default function ProductsPage() {
   const paginatedProducts = filteredAndSortedProducts.slice(startIndex, startIndex + itemsPerPage)
 
   const handleViewProduct = (product: Product) => {
-    setAnimatingProduct(product.id)
+    setAnimatingProduct(Number(product.id))
     setTimeout(() => {
       setSelectedProduct(product)
       setIsModalOpen(true)
@@ -176,7 +173,7 @@ export default function ProductsPage() {
     }
 
     try {
-      await addToCart(token, product.id, 1) // Use product id as number
+      await addToCart(token, product.id, 1) // Use product id as string
       // Refresh cart count
       const cartTotal = await getCartTotal(token)
       setCartCount(cartTotal.totalItems)
@@ -295,7 +292,7 @@ export default function ProductsPage() {
             <Card
               key={product.id}
               className={`bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 rounded-2xl border-2 border-transparent hover:border-blue-200 animate-fade-in group ${
-                animatingProduct === product.id ? "animate-pulse scale-105" : ""
+                Number(animatingProduct) === Number(product.id) ? "animate-pulse scale-105" : ""
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >

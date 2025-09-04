@@ -26,6 +26,21 @@ export class NotificationsController {
     return this.notificationsService.markNotificationAsRead(notificationId, req.user.id);
   }
 
+  @Post('mark-all-read')
+  @UseGuards(JwtAuthGuard)
+  markAllAsRead(@Request() req) {
+    return this.notificationsService.markAllNotificationsAsRead(req.user.id);
+  }
+
+  @Post(':notificationId/delete')
+  @UseGuards(JwtAuthGuard)
+  deleteNotification(
+    @Param('notificationId') notificationId: string,
+    @Request() req,
+  ) {
+    return this.notificationsService.deleteNotification(notificationId, req.user.id);
+  }
+
   @Post('custom')
   @UseGuards(JwtAuthGuard)
   sendCustomNotification(

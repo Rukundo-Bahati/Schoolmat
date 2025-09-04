@@ -165,7 +165,9 @@ export default function OverviewTab({
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h3>
-            <Doughnut data={categorySpendingData} options={doughnutChartOptions} />
+            <div className="h-64">
+              <Doughnut data={categorySpendingData} options={doughnutChartOptions} />
+            </div>
             {categorySpendingData && (
               <div className="mt-4 space-y-2">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Category Breakdown:</h4>
