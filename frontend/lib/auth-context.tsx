@@ -201,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyEmail = async (otp: string) => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
