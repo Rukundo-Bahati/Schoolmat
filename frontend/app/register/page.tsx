@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Eye, EyeOff, Check, X, ArrowLeft, Facebook, Twitter, Instagram } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import Navbar from "@/components/navbar"
-import Footer from "@/components/footer"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -317,7 +316,7 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
       </div>
-      <Footer />
+
       <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   )

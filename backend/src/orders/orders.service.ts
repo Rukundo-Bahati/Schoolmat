@@ -313,8 +313,8 @@ export class OrdersService {
 
                   <h4>Items Ordered:</h4>
                   <ul>
-                    ${Array.isArray(orderData?.cartItems) ? orderData.cartItems.map((item: any) =>
-                      `<li>${item?.productName || 'Product'} (Qty: ${item?.quantity || 0}) - RWF ${((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</li>`
+                    ${Array.isArray(orderData?.items) ? orderData.items.map((item: any) =>
+                      `<li>${item?.productName || item?.name || 'Product'} (Qty: ${item?.quantity || 0}) - RWF ${((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}</li>`
                     ).join('') : '<li>No items found</li>'}
                   </ul>
                 </div>
@@ -346,8 +346,8 @@ export class OrdersService {
         Payment Method: ${orderData?.paymentMethod || 'N/A'}
 
         Items Ordered:
-${Array.isArray(orderData?.cartItems) ? orderData.cartItems.map((item: any) =>
-  `- ${item?.productName || 'Product'} (Qty: ${item?.quantity || 0}) - RWF ${((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}`
+${Array.isArray(orderData?.items) ? orderData.items.map((item: any) =>
+  `- ${item?.productName || item?.name || 'Product'} (Qty: ${item?.quantity || 0}) - RWF ${((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}`
 ).join('\n') : 'No items found'}
 
         You will receive payment instructions via SMS shortly. Please complete your payment to confirm your order.
