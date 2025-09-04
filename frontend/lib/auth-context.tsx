@@ -278,7 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const generateOtp = async (email: string) => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/generate-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
