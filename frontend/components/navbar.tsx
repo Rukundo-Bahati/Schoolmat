@@ -149,7 +149,7 @@ export default function Navbar() {
                         setSearchResults([]);
                       }}
                     >
-                      <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                      <img src={product.imageUrl || "/placeholder.jpg"} alt={product.name} className="w-12 h-12 object-cover rounded" onError={(e) => { e.currentTarget.src = "/placeholder.jpg"; }} />
                       <div>
                         <p className="font-medium text-gray-900">{product.name}</p>
                         <p className="text-sm text-gray-500">{product.price}</p>
@@ -204,7 +204,7 @@ export default function Navbar() {
                               setIsSearchOpen(false);
                             }}
                           >
-                            <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                            <img src={product.imageUrl || "/placeholder.jpg"} alt={product.name} className="w-12 h-12 object-cover rounded" onError={(e) => { e.currentTarget.src = "/placeholder.jpg"; }} />
                             <div>
                               <p className="font-medium text-gray-900">{product.name}</p>
                               <p className="text-sm text-gray-500">{product.price}</p>
