@@ -24,7 +24,7 @@ export class AuthService {
     return await this.userRepository.findOne({ where: { id: userId } });
   }
 
-  async register(createUserDto: CreateUserDto): Promise<DefinedApiResponse> {
+  async register(createUserDto: CreateUserDto): Promise<{ user: UserResponseDto; access_token: string; message: string }> {
     const { email, password, ...userData } = createUserDto;
 
     // Check if user already exists
@@ -64,12 +64,17 @@ export class AuthService {
       throw new BadRequestException('Failed to send verification OTP. Please try again.');
     }
 
-    // Return success response without user details
-    return new DefinedApiResponse(
-      true,
-      undefined,
-      { message: 'Registration successful! Please check your email for OTP verification.' }
-    );
+    // Generate JWT token for immediate login (email still needs verification)
+    const payload = { email: savedUser.email, sub: savedUser.id };
+    const access_token = this.jwtService.sign(payload);
+
+    // Return user without password
+    const { password: _, ...userResponse } = savedUser;
+    return { 
+      user: userResponse as UserResponseDto, 
+      access_token,
+      message: 'Registration successful! Please check your email for OTP verification.'
+    };
   }
 
   async login(loginDto: LoginDto): Promise<{ user: UserResponseDto; access_token: string }> {

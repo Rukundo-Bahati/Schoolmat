@@ -15,7 +15,22 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'User successfully registered with OTP sent',
-    type: DefinedApiResponse
+    schema: {
+      type: 'object',
+      properties: {
+        access_token: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        },
+        user: {
+          $ref: '#/components/schemas/UserResponseDto'
+        },
+        message: {
+          type: 'string',
+          example: 'Registration successful! Please check your email for OTP verification.'
+        }
+      }
+    }
   })
   @ApiResponse({
     status: 400,
