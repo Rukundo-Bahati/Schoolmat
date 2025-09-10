@@ -90,9 +90,28 @@ export default function ProductPurchasePage() {
   }
 
   // Enhanced buy now with celebration animation
-  const handleBuyNow = () => {
-    setShowPurchaseCelebration(true)
-    console.log("[v0] Buy now:", { product: p.name, quantity })
+  const handleBuyNow = async () => {
+    if (!token) {
+      // Store current page as return URL and redirect to login
+      const currentPath = window.location.pathname;
+      localStorage.setItem('return_url', currentPath);
+      router.push('/login');
+      return;
+    }
+
+    try {
+      // Add to cart first
+      await addToCart(token, product!.id, quantity);
+      setShowPurchaseCelebration(true);
+      
+      // Redirect to cart after a short delay
+      setTimeout(() => {
+        router.push('/cart');
+      }, 1500);
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      // Could show error message to user
+    }
   }
 
   if (loading) {

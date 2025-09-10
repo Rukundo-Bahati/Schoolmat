@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
 import { CartProvider } from "@/lib/cart-context"
 import { Toaster } from "@/components/ui/toaster"
+import { ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 import "./globals.css"
 
 const poppins = Poppins({
@@ -46,6 +48,18 @@ export default function RootLayout({
           <CartProvider>
             {children}
             <Toaster />
+            <ToastContainer
+              position="top-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
           </CartProvider>
         </AuthProvider>
         <Analytics />

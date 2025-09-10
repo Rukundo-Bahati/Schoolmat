@@ -18,6 +18,7 @@ interface CartItem {
 interface CartContextType {
   cart: CartItem[];
   cartTotal: number;
+  cartCount: number;
   addToCart: (product: any, quantity: number) => Promise<void>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
@@ -42,6 +43,7 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartTotal, setCartTotal] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -55,7 +57,9 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
     setCartTotal(total);
+    setCartCount(count);
   }, [cart]);
 
   const loadCart = async () => {
@@ -167,6 +171,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     <CartContext.Provider value={{
       cart,
       cartTotal,
+      cartCount,
       addToCart,
       updateCartItem,
       removeFromCart,

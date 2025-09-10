@@ -13,8 +13,7 @@ import { Product } from "@/lib/api";
 export default function Navbar() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const { cart } = useCart();
-  const cartCount = cart?.length || 0;
+  const { cartCount } = useCart();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -254,7 +253,14 @@ export default function Navbar() {
 
                 <Button
                   className="rounded-full bg-blue-500 hover:bg-blue-600 btn-enhanced"
-                  onClick={() => (window.location.href = "/login")}
+                  onClick={() => {
+                    // Store current page as return URL before redirecting to login
+                    const currentPath = window.location.pathname;
+                    if (currentPath !== '/login' && currentPath !== '/register') {
+                      localStorage.setItem('return_url', currentPath);
+                    }
+                    window.location.href = "/login";
+                  }}
                 >
                   Login
                 </Button>

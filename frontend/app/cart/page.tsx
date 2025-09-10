@@ -350,7 +350,7 @@ function CartPageContent() {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
                 <p className="text-gray-600 mb-6">Add some items to get started!</p>
                 <Button
-                  onClick={() => router.push("/")}
+                  onClick={() => router.push("/products")}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Continue Shopping

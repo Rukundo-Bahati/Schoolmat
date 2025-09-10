@@ -11,7 +11,7 @@ import { Eye, EyeOff, ArrowLeft, Facebook, Twitter, Instagram } from "lucide-rea
 import { useAuth } from "@/lib/auth-context"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
-// Using built-in alerts instead of react-toastify to avoid dependency issues
+import { toast } from "react-toastify"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -45,6 +45,13 @@ export default function LoginPage() {
     const returnUrl = searchParams.get('returnUrl')
     if (returnUrl) {
       setReturnUrl(decodeURIComponent(returnUrl))
+    } else {
+      // Store the current page as return URL if user came from somewhere else
+      const referrer = document.referrer
+      if (referrer && !referrer.includes('/login') && !referrer.includes('/register')) {
+        const referrerPath = new URL(referrer).pathname
+        setReturnUrl(referrerPath)
+      }
     }
   }, [searchParams, setReturnUrl])
 
@@ -65,12 +72,13 @@ export default function LoginPage() {
       
       // Check if it's an unverified account error
       if (errorMessage.toLowerCase().includes('verify') || errorMessage.toLowerCase().includes('unverified')) {
-        alert("Please verify your email account before logging in")
+        toast.error("Please verify your email account before logging in")
         setTimeout(() => {
           router.push(`/verify-email?email=${encodeURIComponent(formData.emailOrPhone)}`)
         }, 2000)
       } else {
-        alert(errorMessage)
+        // Show error message instead of automatically redirecting to forgot password
+        toast.error(errorMessage)
       }
     } finally {
       setIsLoading(false)
