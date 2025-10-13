@@ -39,6 +39,8 @@ export class EmailService {
   private initializeTransporter() {
     const emailConfig = this.configService.get('email');
 
+    this.logger.log(`Initializing email transporter with host: ${emailConfig.host}, port: ${emailConfig.port}, secure: ${emailConfig.secure}`);
+
     this.transporter = nodemailer.createTransport({
       host: emailConfig.host,
       port: emailConfig.port,
@@ -47,12 +49,22 @@ export class EmailService {
         user: emailConfig.auth.user,
         pass: emailConfig.auth.pass,
       },
+      tls: {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      },
     });
 
     // Verify connection
     this.transporter.verify((error, success) => {
       if (error) {
         this.logger.error('Email transporter verification failed:', error);
+        this.logger.error('Email config:', {
+          host: emailConfig.host,
+          port: emailConfig.port,
+          secure: emailConfig.secure,
+          user: emailConfig.auth.user,
+          hasPassword: !!emailConfig.auth.pass,
+        });
       } else {
         this.logger.log('Email transporter is ready to send emails');
       }
@@ -71,12 +83,20 @@ export class EmailService {
         text: options.text,
       };
 
+      this.logger.log(`Attempting to send email to ${options.to} with subject: ${options.subject}`);
       const result = await this.transporter.sendMail(mailOptions);
       this.logger.log(`Email sent successfully to ${options.to}: ${result.messageId}`);
 
       return true;
     } catch (error) {
       this.logger.error(`Failed to send email to ${options.to}:`, error);
+      this.logger.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode,
+      });
       return false;
     }
   }
