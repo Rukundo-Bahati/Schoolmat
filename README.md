@@ -2,6 +2,9 @@
 
 A comprehensive e-commerce platform for school supplies with separate frontend (Next.js) and backend (NestJS) applications.
 
+<img width="1600" height="749" alt="image" src="https://github.com/user-attachments/assets/7b6b5c53-3189-4d5f-a7e5-8f402ab4f72a" />
+
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed on your system:
