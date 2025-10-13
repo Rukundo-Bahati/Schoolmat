@@ -3,7 +3,8 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { X, Star, ShoppingCart } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Star, ShoppingCart } from "lucide-react"
 import { type Product } from "@/lib/api"
 import { PartyCelebration } from "@/components/party-celebration"
 
@@ -19,12 +20,8 @@ export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, 
   const router = useRouter()
   const [showCelebration, setShowCelebration] = useState(false)
 
-  if (!isOpen || !product) return null
-
-
-
   const handleAddToCartClick = () => {
-    if (onAddToCart) {
+    if (onAddToCart && product) {
       onAddToCart(product, 1)
       setShowCelebration(true)
     }
@@ -35,18 +32,17 @@ export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, 
     router.push('/products')
   }
 
+  if (!product) return null
+
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Product Details</h2>
-            <Button variant="ghost" size="sm" onClick={onClose} className="rounded-full p-2">
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="!max-w-[1200px] w-[96vw] max-h-[96vh] overflow-hidden flex flex-col p-0 sm:!max-w-[1200px]">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <DialogTitle className="text-2xl font-bold">Product Details</DialogTitle>
+          </DialogHeader>
 
-          <div className="p-6">
+          <div className="px-6 pb-6 overflow-y-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Product Image */}
               <div className="space-y-4">
@@ -133,8 +129,8 @@ export function ProductDetailsModal({ product, isOpen, onClose, onViewPurchase, 
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
 
       <PartyCelebration show={showCelebration} onComplete={handleCelebrationComplete} productName={product.name} />
     </>

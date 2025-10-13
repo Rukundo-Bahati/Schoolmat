@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 
 interface Order {
   id: string
@@ -32,130 +32,125 @@ interface OrderDetailsModalProps {
 export default function OrderDetailsModal({ order, isOpen, onClose }: OrderDetailsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[90vw] max-w-none max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Order Details - {order.id}</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Order Status and Date */}
+      <DialogContent className="!max-w-[1000px] w-[96vw] max-h-[96vh] overflow-hidden flex flex-col p-0 sm:!max-w-[1000px]">
+        <DialogHeader className="px-8 pt-6 pb-4 border-b">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <DialogTitle className="text-xl font-bold">Order #{order.id}</DialogTitle>
+            <div className="flex items-center gap-4">
               <Badge
-                className={
-                  order.status === "pending"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : order.status === "processing"
-                      ? "bg-blue-100 text-blue-800"
+                className={`px-4 py-2 text-base ${order.status === "pending"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : order.status === "processing"
+                    ? "bg-blue-100 text-blue-800"
+                    : order.status === "cancelled"
+                      ? "bg-red-100 text-red-800"
                       : "bg-green-100 text-green-800"
-                }
+                  }`}
               >
                 {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
               </Badge>
-              <span className="text-sm text-gray-600">Ordered on {order.orderDate}</span>
+              <span className="text-base text-gray-600">{order.orderDate}</span>
             </div>
           </div>
+        </DialogHeader>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Parent Information */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Parent Information</h3>
+        <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="space-y-8">
+            {/* Customer & Student Info - Side by Side */}
+            <div className="grid grid-cols-3 gap-8">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">Parent Information</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Name</label>
-                    <p className="text-gray-900">{order.parentName}</p>
+                    <p className="text-sm text-gray-600">Name</p>
+                    <p className="text-base font-medium text-gray-900">{order.parentName}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Email</label>
-                    <p className="text-gray-900">{order.parentEmail}</p>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="text-base font-medium text-gray-900">{order.parentEmail}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Phone</label>
-                    <p className="text-gray-900">{order.parentPhone}</p>
+                    <p className="text-sm text-gray-600">Phone</p>
+                    <p className="text-base font-medium text-gray-900">{order.parentPhone}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Student Information */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Student Information</h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Name</label>
-                    <p className="text-gray-900">{order.studentName}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Grade</label>
-                    <p className="text-gray-900">{order.studentGrade}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Class</label>
-                    <p className="text-gray-900">{order.studentClass}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Order Items */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Order Items</h3>
-              <div className="space-y-4">
-                {order.items.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{item.name}</h4>
-                      <p className="text-sm text-gray-600">Category: {item.category}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">Qty: {item.quantity}</p>
-                      <p className="text-sm text-gray-600">RWF {item.price.toLocaleString()}</p>
-                      <p className="font-medium text-gray-900">Subtotal: RWF {(item.quantity * item.price).toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
-              <div className="my-4 border-t border-gray-200" />
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold">Total Amount</span>
-                <span className="text-2xl font-bold text-blue-700">RWF {order.totalAmount.toLocaleString()}</span>
+
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">Student Information</h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-600">Name</p>
+                    <p className="text-base font-medium text-gray-900">{order.studentName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Grade</p>
+                    <p className="text-base font-medium text-gray-900">{order.studentGrade}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Class</p>
+                    <p className="text-base font-medium text-gray-900">{order.studentClass}</p>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Payment and Delivery Information */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Payment Information</h3>
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">Delivery & Payment</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Payment Method</label>
-                    <p className="text-gray-900">{order.paymentMethod}</p>
+                    <p className="text-sm text-gray-600">Payment Method</p>
+                    <p className="text-base font-medium text-gray-900">{order.paymentMethod}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Amount Paid</label>
-                    <p className="text-gray-900">RWF {order.totalAmount.toLocaleString()}</p>
+                    <p className="text-sm text-gray-600">Delivery Address</p>
+                    <p className="text-base font-medium text-gray-900">{order.deliveryAddress}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Delivery Information</h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Delivery Address</label>
-                    <p className="text-gray-900">{order.deliveryAddress}</p>
+            <Separator />
+
+            {/* Order Items Table */}
+            <div>
+              <h3 className="text-xl font-semibold mb-4 text-gray-900">Order Items</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-100 border-b">
+                    <tr>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Item Name</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Category</th>
+                      <th className="text-center py-4 px-6 font-semibold text-gray-700">Quantity</th>
+                      <th className="text-right py-4 px-6 font-semibold text-gray-700">Unit Price</th>
+                      <th className="text-right py-4 px-6 font-semibold text-gray-700">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.items.map((item, index) => (
+                      <tr key={index} className="border-b last:border-b-0 hover:bg-gray-50">
+                        <td className="py-4 px-6 font-medium text-gray-900">{item.name}</td>
+                        <td className="py-4 px-6 text-gray-700">{item.category}</td>
+                        <td className="py-4 px-6 text-center text-gray-900">{item.quantity}</td>
+                        <td className="py-4 px-6 text-right text-gray-900">RWF {item.price.toLocaleString()}</td>
+                        <td className="py-4 px-6 text-right font-medium text-gray-900">
+                          RWF {(item.quantity * item.price).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Total */}
+              <div className="mt-6 flex justify-end">
+                <div className="bg-blue-50 rounded-lg px-8 py-6 min-w-[400px]">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xl font-semibold text-gray-900">Total Amount</span>
+                    <span className="text-3xl font-bold text-blue-700">RWF {order.totalAmount.toLocaleString()}</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

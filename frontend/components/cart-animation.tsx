@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { ShoppingCart, Check, Sparkles } from "lucide-react"
 
 interface CartAnimationProps {
@@ -27,11 +28,11 @@ export function CartAnimation({ show, onComplete }: CartAnimationProps) {
     }
   }, [show, onComplete])
 
-  if (!show) return null
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 text-center relative overflow-hidden">
+    <Dialog open={show} onOpenChange={() => {}}>
+      <DialogContent className="!max-w-md w-[90vw] sm:!max-w-md" showCloseButton={false}>
+        <DialogTitle className="sr-only">Adding to Cart</DialogTitle>
+        <div className="p-4 text-center relative overflow-hidden">
         {/* Falling sparkles animation */}
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(12)].map((_, i) => (
@@ -74,7 +75,8 @@ export function CartAnimation({ show, onComplete }: CartAnimationProps) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

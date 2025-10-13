@@ -41,10 +41,29 @@ export class UploadsService {
     }
 
     try {
-      // Upload to Cloudinary
+      // Delete old image from Cloudinary if it exists
+      if (product.cloudinaryPublicId) {
+        try {
+          await this.cloudinaryService.deleteImage(product.cloudinaryPublicId);
+        } catch (deleteError) {
+          console.error('Failed to delete old image from Cloudinary:', deleteError);
+          // Continue with upload even if deletion fails
+        }
+      } else if (product.imageUrl && product.imageUrl.includes('cloudinary.com')) {
+        // Try to extract public_id from URL for legacy images
+        try {
+          const publicId = this.cloudinaryService.getPublicIdFromUrl(product.imageUrl);
+          await this.cloudinaryService.deleteImage(publicId);
+        } catch (deleteError) {
+          console.error('Failed to delete old image from Cloudinary:', deleteError);
+          // Continue with upload even if deletion fails
+        }
+      }
+
+      // Upload new image to Cloudinary
       const cloudinaryResponse = await this.cloudinaryService.uploadImage(file);
       
-      // Update product with Cloudinary image URL
+      // Update product with new Cloudinary image URL
       const imageUrl = cloudinaryResponse.secure_url;
       product.imageUrl = imageUrl;
       product.cloudinaryPublicId = cloudinaryResponse.public_id; // Store public_id for future reference

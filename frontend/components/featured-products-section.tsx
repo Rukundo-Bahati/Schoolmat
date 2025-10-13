@@ -29,6 +29,7 @@ export default function FeaturedProductsSection({
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [displayCount, setDisplayCount] = useState(8); // Show 2 rows (4 products per row)
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -45,6 +46,13 @@ export default function FeaturedProductsSection({
 
     loadProducts();
   }, []);
+
+  const handleLoadMore = () => {
+    setDisplayCount(prev => prev + 4); // Load 1 more row (4 products)
+  };
+
+  const visibleProducts = products.slice(0, displayCount);
+  const hasMore = displayCount < products.length;
 
   if (loading) {
     return (
@@ -123,7 +131,7 @@ export default function FeaturedProductsSection({
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-          {products.map((product: Product, index: number) => (
+          {visibleProducts.map((product: Product, index: number) => (
             <Card
               key={product.id}
               className="bg-white hover:shadow-2xl transition-all duration-300 card-enhanced group"
@@ -171,6 +179,17 @@ export default function FeaturedProductsSection({
             </Card>
           ))}
         </div>
+
+        {hasMore && (
+          <div className="text-center mt-8">
+            <Button
+              onClick={handleLoadMore}
+              className="rounded-full bg-white text-blue-700 hover:bg-blue-300 px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl  transition-all"
+            >
+              Load More Products
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

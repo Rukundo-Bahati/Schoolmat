@@ -53,17 +53,17 @@ function CartPageContent() {
   const mapBackendToFrontend = (backendItems: any[]): CartItem[] => {
     // Ensure we have an array
     const items = Array.isArray(backendItems) ? backendItems : [];
-    
+
     return items.map((item) => {
       // Check if this is a nested item structure (product inside cart item)
       const product = item.product || {};
       const itemId = item.id || item._id || '';
-      
+
       return {
         id: itemId,
         name: item.productName || product.name || item.name || 'Unnamed Product',
-        price: typeof (item.price || product.price || 0) === 'string' 
-          ? parseFloat(item.price || product.price || 0) 
+        price: typeof (item.price || product.price || 0) === 'string'
+          ? parseFloat(item.price || product.price || 0)
           : (item.price || product.price || 0),
         image: item.imageUrl || product.image || product.imageUrl || item.image || "/placeholder-product.png",
         quantity: item.quantity || 1,
@@ -88,7 +88,7 @@ function CartPageContent() {
       const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
       return sum + (price * item.quantity);
     }, 0);
-    
+
     setTotalItems(itemCount);
     setSubtotal(subtotal);
     setTotal(subtotal); // No tax or shipping for now
@@ -106,15 +106,15 @@ function CartPageContent() {
         console.log('Loading cart items...');
         setIsLoading(true);
         setError(null);
-        
+
         // Fetch items from the API
         const backendItems = await fetchCartItems(token);
         console.log('Backend cart items:', backendItems);
-        
+
         // Map to frontend format
         const frontendItems = mapBackendToFrontend(backendItems);
         console.log('Mapped frontend items:', frontendItems);
-        
+
         // Update state
         setCartItemsState(frontendItems);
         calculateTotals(frontendItems);
@@ -136,16 +136,16 @@ function CartPageContent() {
   const updateQuantity = async (itemId: string, change: number) => {
     // Store original items for potential rollback
     const originalItems = [...cartItemsState];
-    
+
     try {
       console.log('updateQuantity called with:', { itemId, change });
-      
+
       const item = cartItemsState.find(item => item.id === itemId);
       if (!item) {
         console.error('Item not found in cart:', itemId);
         return;
       }
-      
+
       if (!token) {
         console.error('No authentication token found');
         toast({
@@ -165,26 +165,26 @@ function CartPageContent() {
 
       console.log('Updating quantity:', { itemId, currentQuantity: item.quantity, newQuantity });
       setShowUpdateAnimation(itemId);
-      
+
       // Optimistic update
       const updatedItems = cartItemsState.map(cartItem =>
         cartItem.id === itemId ? { ...cartItem, quantity: newQuantity } : cartItem
       );
-      
+
       setCartItemsState(updatedItems);
       calculateTotals(updatedItems);
-      
+
       try {
         console.log('Calling updateCartItem API...');
         await updateCartItem(token, itemId, newQuantity);
         console.log('Successfully updated cart item');
       } catch (apiError) {
         console.error('API Error in updateCartItem:', apiError);
-        
+
         // Revert to original state
         setCartItemsState(originalItems);
         calculateTotals(originalItems);
-        
+
         // Handle specific API errors
         if (apiError instanceof Error) {
           if (apiError.message.includes('authentication') || apiError.message.includes('Authorization')) {
@@ -204,14 +204,14 @@ function CartPageContent() {
             return;
           }
         }
-        
+
         // Generic error handling
         toast({
           title: "Update failed",
           description: "Failed to update cart. Please try again.",
           variant: "destructive"
         });
-        
+
         throw apiError; // Re-throw for outer catch to log
       }
     } catch (error) {
@@ -222,7 +222,7 @@ function CartPageContent() {
         cartItemCount: cartItemsState.length,
         hasToken: !!token
       });
-      
+
       // Ensure we revert to original state (if not already done in inner catch)
       setCartItemsState(originalItems);
       calculateTotals(originalItems);
@@ -244,32 +244,32 @@ function CartPageContent() {
     }
 
     setShowRemoveAnimation(itemId);
-    
+
     try {
       // Store original items for rollback if needed
       const originalItems = [...cartItemsState];
       const itemToRemove = cartItemsState.find(item => item.id === itemId);
-      
+
       if (!itemToRemove) {
         console.error('Item not found in cart:', itemId);
         return;
       }
-      
+
       // Optimistic update
       const updatedItems = cartItemsState.filter(item => item.id !== itemId);
       setCartItemsState(updatedItems);
       calculateTotals(updatedItems);
-      
+
       try {
         // Call the API to remove the item from the server
         await removeFromCart(token, itemId);
       } catch (apiError) {
         console.error('API Error removing item:', apiError);
-        
+
         // Revert to original state
         setCartItemsState(originalItems);
         calculateTotals(originalItems);
-        
+
         // Handle specific API errors
         if (apiError instanceof Error) {
           if (apiError.message.includes('authentication') || apiError.message.includes('Authorization')) {
@@ -282,14 +282,14 @@ function CartPageContent() {
             return;
           }
         }
-        
+
         // Generic error handling
         toast({
           title: "Remove failed",
           description: "Failed to remove item from cart. Please try again.",
           variant: "destructive"
         });
-        
+
         throw apiError; // Re-throw for outer catch to log
       }
     } catch (error) {
@@ -310,7 +310,7 @@ function CartPageContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="flex items-center mb-6">
           <Button
@@ -358,15 +358,13 @@ function CartPageContent() {
               </div>
             ) : (
               <div className="space-y-4">
-                
+
                 {cartItemsState.map((item) => (
                   <div
                     key={item.id}
-                    className={`bg-white rounded-xl border-2 p-4 flex items-center gap-4 ${
-                      showRemoveAnimation === item.id ? 'opacity-0 scale-95 transition-all duration-300' : ''
-                    } ${
-                      showUpdateAnimation === item.id ? 'border-blue-400' : 'border-gray-200'
-                    }`}
+                    className={`bg-white rounded-xl border-2 p-4 flex items-center gap-4 ${showRemoveAnimation === item.id ? 'opacity-0 scale-95 transition-all duration-300' : ''
+                      } ${showUpdateAnimation === item.id ? 'border-blue-400' : 'border-gray-200'
+                      }`}
                   >
                     <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                       <img
@@ -375,7 +373,7 @@ function CartPageContent() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
                         <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
@@ -388,11 +386,11 @@ function CartPageContent() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <p className="text-sm text-gray-600 mt-1">
                         RWF {item.price.toLocaleString()}
                       </p>
-                      
+
                       <div className="flex items-center mt-2">
                         <div className="flex items-center border rounded-lg overflow-hidden">
                           <Button
@@ -423,30 +421,30 @@ function CartPageContent() {
               </div>
             )}
           </div>
-          
+
           {/* Order Summary */}
           <div className="lg:sticky lg:top-4 h-fit">
             <Card className="bg-white border-2 border-gray-200 rounded-xl shadow-sm">
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
-                
+
                 <div className="space-y-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal ({totalItems} items)</span>
                     <span className="font-medium">RWF {subtotal.toLocaleString()}</span>
                   </div>
-                  
+
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-semibold text-gray-900">
                       <span>Total</span>
                       <span>RWF {total.toLocaleString()}</span>
                     </div>
                   </div>
-                  
+
                   <Button
                     onClick={handleCheckout}
                     disabled={cartItemsState.length === 0 || isLoading}
-                    className="w-full mt-6 bg-blue-600 hover:bg-blue-700 h-12 text-base"
+                    className="w-full mt-6 bg-blue-600 hover:bg-blue-800 h-12 text-base"
                   >
                     {isLoading ? (
                       <>

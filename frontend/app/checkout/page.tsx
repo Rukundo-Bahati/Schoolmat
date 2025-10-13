@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Search,
   ShoppingCart,
@@ -1065,9 +1066,10 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+      <Dialog open={showSuccessModal} onOpenChange={() => {}}>
+        <DialogContent className="!max-w-md w-[90vw] sm:!max-w-md" showCloseButton={false}>
+          <DialogTitle className="sr-only">Order Successful</DialogTitle>
+          <div className="p-2">
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
@@ -1113,8 +1115,8 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

@@ -115,7 +115,7 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [showRequired, setShowRequired] = useState(false)
   const [animatingProduct, setAnimatingProduct] = useState<number | null>(null)
-  const itemsPerPage = 12
+  const itemsPerPage = 8 // Show 2 rows (4 products per row)
 
 
 
@@ -291,9 +291,8 @@ export default function ProductsPage() {
           {paginatedProducts.map((product, index) => (
             <Card
               key={product.id}
-              className={`bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 rounded-2xl border-2 border-transparent hover:border-blue-200 animate-fade-in group ${
-                Number(animatingProduct) === Number(product.id) ? "animate-pulse scale-105" : ""
-              }`}
+              className={`bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 rounded-2xl border-2 border-transparent hover:border-blue-200 animate-fade-in group ${Number(animatingProduct) === Number(product.id) ? "animate-pulse scale-105" : ""
+                }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardContent className="p-4">
@@ -328,9 +327,8 @@ export default function ProductsPage() {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-3 w-3 transition-colors ${
-                        i < (product.rating || 4) ? "text-yellow-400 fill-current" : "text-gray-300"
-                      }`}
+                      className={`h-3 w-3 transition-colors ${i < (product.rating || 4) ? "text-yellow-400 fill-current" : "text-gray-300"
+                        }`}
                     />
                   ))}
                   <span className="text-xs text-gray-600 ml-1">({product.reviews})</span>
@@ -384,11 +382,10 @@ export default function ProductsPage() {
                 key={i + 1}
                 variant={currentPage === i + 1 ? "default" : "outline"}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`rounded-full w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm btn-enhanced ${
-                  currentPage === i + 1
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                    : "border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
-                }`}
+                className={`rounded-full w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm btn-enhanced ${currentPage === i + 1
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  : "border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                  }`}
               >
                 {i + 1}
               </Button>

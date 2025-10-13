@@ -12,7 +12,12 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<ProductResponseDto> {
-    const product = this.productRepository.create(createProductDto);
+    const product = this.productRepository.create({
+      ...createProductDto,
+      rating: createProductDto.rating ?? 0,
+      reviews: createProductDto.reviews ?? 0,
+      description: createProductDto.description ?? '',
+    });
     const savedProduct = await this.productRepository.save(product);
     return savedProduct as ProductResponseDto;
   }
@@ -46,7 +51,12 @@ export class ProductsService {
       throw new BadRequestException('Stock cannot be negative');
     }
 
+    // Update product fields
     Object.assign(product, updateProductDto);
+    
+    // Update lastUpdated timestamp
+    product.lastUpdated = new Date();
+    
     const updatedProduct = await this.productRepository.save(product);
     return updatedProduct as ProductResponseDto;
   }

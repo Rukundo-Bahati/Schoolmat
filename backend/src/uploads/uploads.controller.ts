@@ -78,7 +78,22 @@ export class UploadsController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<UploadResponseDto> {
     try {
+      // Validate file exists
+      if (!file) {
+        throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
+      }
+
+      console.log('Uploading image for product:', productId);
+      console.log('File details:', {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      });
+
       const url = await this.uploadsService.uploadProductImage(productId, file);
+      
+      console.log('Image uploaded successfully:', url);
+      
       return {
         success: true,
         url,
@@ -87,7 +102,11 @@ export class UploadsController {
         mimetype: file.mimetype
       };
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      console.error('Error uploading product image:', error);
+      throw new HttpException(
+        error.message || 'Failed to upload image',
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 

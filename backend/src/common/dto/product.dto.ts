@@ -10,13 +10,14 @@ export class CreateProductDto {
   @IsString()
   name: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Product description',
     example: 'High-quality school notebook with 200 pages',
     type: 'string'
   })
+  @IsOptional()
   @IsString()
-  description: string;
+  description?: string;
 
   @ApiProperty({
     description: 'Product price',
@@ -77,24 +78,26 @@ export class CreateProductDto {
   @IsBoolean()
   required: boolean;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Product rating',
     example: 4.5,
     type: 'number',
     minimum: 0,
     maximum: 5
   })
+  @IsOptional()
   @IsNumber()
-  rating: number;
+  rating?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Number of reviews',
     example: 25,
     type: 'number',
     minimum: 0
   })
+  @IsOptional()
   @IsNumber()
-  reviews: number;
+  reviews?: number;
 }
 
 export class UpdateProductDto {
@@ -155,6 +158,34 @@ export class UpdateProductDto {
   imageUrl?: string;
 
   @ApiPropertyOptional({
+    description: 'Product supplier',
+    example: 'ABC Stationery Co.',
+    type: 'string'
+  })
+  @IsOptional()
+  @IsString()
+  supplier?: string;
+
+  @ApiPropertyOptional({
+    description: 'Minimum stock level',
+    example: 10,
+    type: 'number',
+    minimum: 0
+  })
+  @IsOptional()
+  @IsNumber()
+  minStock?: number;
+
+  @ApiPropertyOptional({
+    description: 'Is product required',
+    example: true,
+    type: 'boolean'
+  })
+  @IsOptional()
+  @IsBoolean()
+  required?: boolean;
+
+  @ApiPropertyOptional({
     description: 'Is product active',
     example: true,
     type: 'boolean'
@@ -183,6 +214,15 @@ export class UpdateProductDto {
   @IsOptional()
   @IsNumber()
   reviews?: number;
+
+  @ApiPropertyOptional({
+    description: 'Cloudinary public ID for image management',
+    example: 'schoolmart/products/abc123',
+    type: 'string'
+  })
+  @IsOptional()
+  @IsString()
+  cloudinaryPublicId?: string;
 }
 
 export class ProductResponseDto {

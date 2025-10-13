@@ -157,7 +157,7 @@ export default function OverviewTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Material Purchase per Term Trend</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Purchase per Term Trend</h3>
             <Line data={orderTrendData} options={lineChartOptions} />
           </CardContent>
         </Card>

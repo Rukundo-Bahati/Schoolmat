@@ -155,7 +155,9 @@ export async function createSchoolProduct(token: string, productData: Partial<Sc
       }),
     });
     if (!response.ok) {
-      throw new Error('Failed to create product');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Create product error:', errorData);
+      throw new Error(errorData.message || `Failed to create product: ${response.status} ${response.statusText}`);
     }
     const product = await response.json();
     return {

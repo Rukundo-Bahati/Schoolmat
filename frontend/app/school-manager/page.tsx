@@ -386,26 +386,98 @@ export default function SchoolManagerDashboard() {
       // Extract imageFile from productData before sending to API
       const { imageFile, ...productDataWithoutImage } = productData
 
+      let savedProduct: SchoolManagerProduct
+
       if (editingProduct) {
         // Update existing product
-        const updatedProduct = await updateSchoolProduct(token, editingProduct.id, productDataWithoutImage)
+        savedProduct = await updateSchoolProduct(token, editingProduct.id, productDataWithoutImage)
+        
+        // If there's a new image file, upload it to Cloudinary
+        if (imageFile) {
+          const formData = new FormData()
+          formData.append('file', imageFile)
+          
+          console.log('Uploading image for product:', editingProduct.id)
+          console.log('Image file:', imageFile.name, imageFile.type, imageFile.size)
+          
+          const uploadResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/uploads/products/${editingProduct.id}/image`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+              body: formData,
+            }
+          )
+          
+          if (uploadResponse.ok) {
+            const uploadResult = await uploadResponse.json()
+            console.log('Image uploaded successfully:', uploadResult.url)
+            // Update the product with the new image URL
+            savedProduct = await updateSchoolProduct(token, editingProduct.id, {
+              imageUrl: uploadResult.url,
+            })
+          } else {
+            const errorData = await uploadResponse.json().catch(() => ({ message: 'Unknown error' }))
+            console.error('Failed to upload image:', errorData)
+            alert(`Product updated but image upload failed: ${errorData.message || 'Please try again.'}`)
+          }
+        }
+        
         setProducts(
           products.map((p) =>
             p.id === editingProduct.id
-              ? updatedProduct
+              ? savedProduct
               : p,
           ),
         )
       } else {
         // Add new product
-        const newProduct = await createSchoolProduct(token, productDataWithoutImage)
-        setProducts([...products, newProduct])
+        savedProduct = await createSchoolProduct(token, productDataWithoutImage)
+        
+        // If there's an image file, upload it to Cloudinary
+        if (imageFile) {
+          const formData = new FormData()
+          formData.append('file', imageFile)
+          
+          console.log('Uploading image for new product:', savedProduct.id)
+          console.log('Image file:', imageFile.name, imageFile.type, imageFile.size)
+          
+          const uploadResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/uploads/products/${savedProduct.id}/image`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+              body: formData,
+            }
+          )
+          
+          if (uploadResponse.ok) {
+            const uploadResult = await uploadResponse.json()
+            console.log('Image uploaded successfully:', uploadResult.url)
+            // Update the product with the new image URL
+            savedProduct = await updateSchoolProduct(token, savedProduct.id, {
+              imageUrl: uploadResult.url,
+            })
+          } else {
+            const errorData = await uploadResponse.json().catch(() => ({ message: 'Unknown error' }))
+            console.error('Failed to upload image:', errorData)
+            alert(`Product created but image upload failed: ${errorData.message || 'Please try again.'}`)
+          }
+        }
+        
+        setProducts([...products, savedProduct])
       }
+      
       setIsAddingProduct(false)
       setEditingProduct(null)
     } catch (error) {
       console.error("Failed to save product:", error)
       alert("Failed to save product. Please try again.")
+      throw error
     }
   }
 

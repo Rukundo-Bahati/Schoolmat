@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { X, Save, Upload, Image as ImageIcon } from "lucide-react"
+import { Save, Image as ImageIcon, X } from "lucide-react"
 
 interface Product {
   id: string
@@ -16,12 +16,13 @@ interface Product {
   description: string
   supplier: string
   lastUpdated: string
+  imageUrl?: string
 }
 
 interface ProductFormModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (productData: Partial<Product>) => void
+  onSave: (productData: Partial<Product> & { imageFile?: File }) => Promise<void>
   editingProduct: Product | null
 }
 
@@ -45,6 +46,7 @@ export default function ProductFormModal({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -59,6 +61,10 @@ export default function ProductFormModal({
         description: editingProduct.description,
         supplier: editingProduct.supplier,
       })
+      // Set existing image preview if editing
+      if (editingProduct.imageUrl) {
+        setImagePreview(editingProduct.imageUrl)
+      }
     } else {
       setFormData({
         name: "",
@@ -70,19 +76,35 @@ export default function ProductFormModal({
         description: "",
         supplier: "",
       })
+      setImagePreview(null)
+      setImageFile(null)
     }
   }, [editingProduct, isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsUploading(true)
 
-    // Include image file in the form data if selected
-    const productDataWithImage = {
-      ...formData,
-      imageFile: imageFile, // Add the image file to the data
+    try {
+      // Include image file in the form data if selected
+      const productDataWithImage = {
+        ...formData,
+        imageFile: imageFile, // Add the image file to the data
+      }
+
+      await onSave(productDataWithImage)
+      
+      // Reset form after successful save
+      setImageFile(null)
+      setImagePreview(null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Error saving product:', error)
+    } finally {
+      setIsUploading(false)
     }
-
-    onSave(productDataWithImage)
   }
 
   const handleInputChange = (field: string, value: string | number | boolean) => {
@@ -138,25 +160,15 @@ export default function ProductFormModal({
     }
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl font-bold text-gray-900">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="!max-w-[800px] w-[96vw] max-h-[96vh] overflow-hidden flex flex-col p-0 sm:!max-w-[800px]">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle className="text-2xl font-bold">
             {editingProduct ? "Edit Product" : "Add New Product"}
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="rounded-full"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="px-6 pb-6 overflow-y-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -345,20 +357,22 @@ export default function ProductFormModal({
                 variant="outline"
                 onClick={onClose}
                 className="rounded-full"
+                disabled={isUploading}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="rounded-full bg-blue-700 hover:bg-blue-800"
+                disabled={isUploading}
               >
                 <Save className="h-4 w-4 mr-2" />
-                {editingProduct ? "Update Product" : "Add Product"}
+                {isUploading ? "Saving..." : editingProduct ? "Update Product" : "Add Product"}
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

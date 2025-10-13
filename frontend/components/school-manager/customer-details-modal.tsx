@@ -45,18 +45,18 @@ export default function CustomerDetailsModal({ orders, parentEmail, isOpen, onCl
     return acc
   }, {} as Record<string, number>)
   const topItems = Object.entries(itemCounts)
-    .sort(([,a], [,b]) => b - a)
+    .sort(([, a], [, b]) => b - a)
     .slice(0, 5)
     .map(([name, count]) => `${name} (${count})`)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[90vw] max-w-none max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="!max-w-[1000px] w-[96vw] max-h-[96vh] overflow-hidden flex flex-col p-0 sm:!max-w-[1000px]">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-2xl font-bold">Customer Details - {parent.parentName}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 px-6 pb-6 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Parent Information */}
             <Card>
