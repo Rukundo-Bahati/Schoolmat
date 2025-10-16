@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
+const sgMail = require('@sendgrid/mail');
 
 export interface EmailOptions {
   to: string;
@@ -31,9 +32,26 @@ export interface PasswordResetEmailData {
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
+  private useSendGridAPI: boolean;
 
   constructor(private configService: ConfigService) {
-    this.initializeTransporter();
+    this.initializeEmailService();
+  }
+
+  private initializeEmailService() {
+    const emailConfig = this.configService.get('email');
+    
+    // Check if we're using SendGrid (host contains sendgrid)
+    this.useSendGridAPI = emailConfig.host.includes('sendgrid');
+    
+    if (this.useSendGridAPI) {
+      this.logger.log('Initializing SendGrid Web API');
+      sgMail.setApiKey(emailConfig.auth.pass);
+      this.logger.log('SendGrid API initialized successfully');
+    } else {
+      this.logger.log(`Initializing email transporter with host: ${emailConfig.host}, port: ${emailConfig.port}, secure: ${emailConfig.secure}`);
+      this.initializeTransporter();
+    }
   }
 
   private initializeTransporter() {
@@ -55,7 +73,7 @@ export class EmailService {
     });
 
     // Verify connection
-    this.transporter.verify((error, success) => {
+    this.transporter.verify((error) => {
       if (error) {
         this.logger.error('Email transporter verification failed:', error);
         this.logger.error('Email config:', {
@@ -75,19 +93,35 @@ export class EmailService {
     try {
       const emailConfig = this.configService.get('email');
 
-      const mailOptions = {
-        from: emailConfig.from,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text,
-      };
-
       this.logger.log(`Attempting to send email to ${options.to} with subject: ${options.subject}`);
-      const result = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Email sent successfully to ${options.to}: ${result.messageId}`);
 
-      return true;
+      if (this.useSendGridAPI) {
+        // Use SendGrid Web API
+        const msg = {
+          to: options.to,
+          from: emailConfig.from,
+          subject: options.subject,
+          text: options.text || '',
+          html: options.html || options.text || '',
+        };
+
+        const result = await sgMail.send(msg);
+        this.logger.log(`Email sent successfully via SendGrid API to ${options.to}: ${result[0].statusCode}`);
+        return true;
+      } else {
+        // Use SMTP transporter
+        const mailOptions = {
+          from: emailConfig.from,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+        };
+
+        const result = await this.transporter.sendMail(mailOptions);
+        this.logger.log(`Email sent successfully to ${options.to}: ${result.messageId}`);
+        return true;
+      }
     } catch (error) {
       this.logger.error(`Failed to send email to ${options.to}:`, error);
       this.logger.error('Error details:', {
