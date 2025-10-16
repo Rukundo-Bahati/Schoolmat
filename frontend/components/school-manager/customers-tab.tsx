@@ -62,7 +62,9 @@ export default function CustomersTab({
       const students = Array.from(
         new Set(parentOrders.map((o) => `${o.studentName} (${o.studentGrade})`)),
       )
-      const purchasedItems = Array.from(new Set(parentOrders.filter(order => order.status === 'delivered').flatMap(order => order.items.map(item => item.name)))).join(', ')
+      const totalItemsPurchased = parentOrders.filter(order => order.status === 'delivered').reduce((total, order) => {
+        return total + order.items.reduce((orderTotal, item) => orderTotal + item.quantity, 0)
+      }, 0)
 
       return {
         parentEmail,
@@ -74,7 +76,7 @@ export default function CustomersTab({
         lastOrderDate: lastOrder.orderDate,
         lastOrderStatus: lastOrder.status,
         isActive: parentOrders.some((o) => o.status === "pending" || o.status === "processing"),
-        purchasedItems
+        totalItemsPurchased
       }
     })
 
@@ -202,7 +204,7 @@ export default function CustomersTab({
                   >
                     Last Order {getSortIndicator('lastOrderDate')}
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Purchased Items</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Total Items Purchased</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
@@ -244,7 +246,8 @@ export default function CustomersTab({
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
-                        <p className="text-sm text-gray-900">{customer.purchasedItems}</p>
+                        <p className="font-bold text-gray-900 text-center">{customer.totalItemsPurchased}</p>
+                        <p className="text-xs text-gray-500 text-center">items</p>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex space-x-2">
