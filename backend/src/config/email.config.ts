@@ -8,7 +8,7 @@ export default registerAs('email', () => ({
     user: process.env.EMAIL_USER || 'your-email@gmail.com',
     pass: process.env.EMAIL_PASS || 'your-app-password',
   },
-  from: process.env.EMAIL_FROM || "SchoolMart",
+  from: process.env.EMAIL_FROM || "SchoolMart <rukundorca@gmail.com>",
   templates: {
     otp: {
       subject: 'Your OTP for SchoolMart',

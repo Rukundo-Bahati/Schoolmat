@@ -97,12 +97,20 @@ export class EmailService {
 
       if (this.useSendGridAPI) {
         // Use SendGrid Web API
+        this.logger.log(`Using from address: ${emailConfig.from}`);
+        
         const msg = {
           to: options.to,
           from: emailConfig.from,
           subject: options.subject,
           text: options.text || '',
           html: options.html || options.text || '',
+          // Enable sandbox mode for testing (emails won't actually be sent)
+          mailSettings: {
+            sandboxMode: {
+              enable: process.env.NODE_ENV !== 'production' && process.env.SENDGRID_SANDBOX === 'true'
+            }
+          }
         };
 
         const result = await sgMail.send(msg);
