@@ -617,17 +617,25 @@ export async function updateOrderStatus(token: string, orderId: string, status: 
 
 export async function bulkUpdateOrderStatus(token: string, orderIds: string[], status: string): Promise<SchoolManagerOrder[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/bulk/status`, {
-      method: 'PATCH',
+    const requestBody = { orderIds, status };
+    console.log('Bulk update API request:', requestBody);
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/bulk/update-status`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ orderIds, status }),
+      body: JSON.stringify(requestBody),
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to bulk update order status');
+      console.error('Bulk update error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
+      throw new Error(errorData.message || `Failed to bulk update order status: ${response.status} ${response.statusText}`);
     }
     const orders = await response.json();
     return orders.map((order: any) => ({

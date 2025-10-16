@@ -44,6 +44,7 @@ interface OrdersTabProps {
   onDownloadReport: () => void
   isAdmin: boolean
   token?: string
+  onOrderUpdate?: (orderId: string, newStatus: string) => void
 }
 
 export default function OrdersTab({
@@ -54,7 +55,8 @@ export default function OrdersTab({
   onFilterChange,
   onDownloadReport,
   isAdmin,
-  token
+  token,
+  onOrderUpdate
 }: OrdersTabProps) {
   const { toast } = useToast()
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -157,6 +159,12 @@ export default function OrdersTab({
     setError(undefined)
     try {
       await updateOrderStatus(token, orderId, newStatus)
+
+      // Update the parent component's state immediately
+      if (onOrderUpdate) {
+        onOrderUpdate(orderId, newStatus)
+      }
+
       toast({
         title: "Status saved",
         description: `Order ${orderId} status updated to ${newStatus}`,
@@ -203,7 +211,19 @@ export default function OrdersTab({
     setIsBulkUpdating(true)
     setError(undefined)
     try {
+      console.log('Bulk update request:', {
+        orderIds: Array.from(selectedOrderIds),
+        status: bulkStatus
+      })
       await bulkUpdateOrderStatus(token, Array.from(selectedOrderIds), bulkStatus)
+
+      // Update the parent component's state immediately for all selected orders
+      if (onOrderUpdate) {
+        selectedOrderIds.forEach(orderId => {
+          onOrderUpdate(orderId, bulkStatus)
+        })
+      }
+
       toast({
         title: "Bulk Update Successful",
         description: `Bulk updated ${selectedOrderIds.size} orders to status ${bulkStatus}`,
@@ -329,7 +349,7 @@ export default function OrdersTab({
                     className="text-left py-3 px-4 font-semibold text-gray-900 cursor-pointer"
                     onClick={() => handleSort('id')}
                   >
-                    Order ID {getSortIndicator('id')}
+                    Order {getSortIndicator('id')}
                   </th>
                   <th
                     className="text-left py-3 px-4 font-semibold text-gray-900 cursor-pointer"
@@ -343,7 +363,7 @@ export default function OrdersTab({
                   >
                     Student Info {getSortIndicator('studentName')}
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Items</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Total Items</th>
                   <th
                     className="text-left py-3 px-4 font-semibold text-gray-900 cursor-pointer"
                     onClick={() => handleSort('totalAmount')}
@@ -374,8 +394,10 @@ export default function OrdersTab({
                     )}
                     <td className="py-3 px-4">
                       <div>
-                        <p className="font-medium text-gray-900">{order.id}</p>
-                        <p className="text-sm text-gray-600">{order.orderDate}</p>
+                        <p className="font-medium text-gray-900">
+                          {new Date(order.orderDate).getFullYear()}-{String(new Date(order.orderDate).getMonth() + 1).padStart(2, '0')}-{order.id.slice(-6).toUpperCase()}
+                        </p>
+                        <p className="text-sm text-gray-600">{new Date(order.orderDate).toLocaleDateString()}</p>
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -394,20 +416,29 @@ export default function OrdersTab({
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="space-y-1">
-                        {order.items.map((item, index) => (
-                          <p key={index} className="text-sm text-gray-600">
-                            {item.quantity}x {item.name}
-                          </p>
-                        ))}
-                      </div>
+                      <p className="font-bold text-gray-900 text-center">
+                        {order.items.reduce((total, item) => total + item.quantity, 0)}
+                      </p>
+                      <p className="text-xs text-gray-500 text-center">items</p>
                     </td>
                     <td className="py-3 px-4">
                       <p className="font-bold text-gray-900">RWF {order.totalAmount.toLocaleString()}</p>
                       <p className="text-sm text-gray-600">{order.paymentMethod}</p>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex flex-col space-y-2">
+                      {isAdmin ? (
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleSingleStatusChange(order.id, e.target.value)}
+                          disabled={isSingleUpdating}
+                          className="text-sm rounded border border-gray-300 px-3 py-2 min-w-[120px] w-full"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      ) : (
                         <Badge
                           className={
                             order.status === "pending"
@@ -421,20 +452,7 @@ export default function OrdersTab({
                         >
                           {order.status}
                         </Badge>
-                        {isAdmin && (
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleSingleStatusChange(order.id, e.target.value)}
-                            disabled={isSingleUpdating}
-                            className="text-xs rounded border border-gray-300 px-2 py-1"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        )}
-                      </div>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
@@ -469,11 +487,11 @@ export default function OrdersTab({
           order={{
             ...selectedOrder,
             items: selectedOrder.items.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-            category: item.category
-          }))
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+              category: item.category
+            }))
           }}
           isOpen={isModalOpen}
           onClose={() => {

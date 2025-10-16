@@ -695,6 +695,15 @@ export default function SchoolManagerDashboard() {
                   onDownloadReport={handleDownloadOrdersReport}
                   isAdmin={user?.role === "admin" || user?.role === "school_manager"}
                   token={token || undefined}
+                  onOrderUpdate={(orderId, newStatus) => {
+                    setOrders(prevOrders => 
+                      prevOrders.map(order => 
+                        order.id === orderId 
+                          ? { ...order, status: newStatus as "pending" | "processing" | "delivered" | "cancelled" }
+                          : order
+                      )
+                    )
+                  }}
                 />
               )}
 

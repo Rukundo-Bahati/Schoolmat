@@ -154,16 +154,15 @@ export class BulkUpdateOrderStatusDto {
     type: [String]
   })
   @IsArray()
-  @IsUUID('4', { each: true })
   orderIds: string[];
 
   @ApiProperty({
     description: 'New order status for all specified orders',
-    example: OrderStatus.DELIVERED,
-    enum: OrderStatus
+    example: 'delivered',
+    type: 'string'
   })
-  @IsEnum(OrderStatus)
-  status: OrderStatus;
+  @IsString()
+  status: string;
 }
 
 export class OrderResponseDto {
