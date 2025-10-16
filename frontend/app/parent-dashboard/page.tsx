@@ -156,12 +156,12 @@ export default function ParentDashboard() {
       console.error('No authentication token available');
       return;
     }
-    
+
     console.log('Deleting notification with ID:', id, 'Type:', typeof id);
-    
+
     // Convert ID to string if it's a number
     let notificationId = typeof id === 'number' ? id.toString() : id;
-    
+
     // If the ID is a number, try to find the full notification to get its UUID
     if (typeof id === 'number' || !isNaN(Number(id))) {
       const notification = parentNotifications.find(n => n.id === id.toString() || n.id === notificationId);
@@ -169,7 +169,7 @@ export default function ParentDashboard() {
         notificationId = notification.id; // Use the UUID from the notification
       }
     }
-    
+
     // Validate ID is not empty and is a valid UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!notificationId || !uuidRegex.test(notificationId)) {
@@ -178,18 +178,18 @@ export default function ParentDashboard() {
       alert('Invalid notification ID format. Please try again.');
       return;
     }
-    
+
     try {
       console.log('Attempting to delete notification with ID:', notificationId);
       await deleteParentNotification(notificationId, token);
-      
+
       // Update the UI by removing the deleted notification
       setParentNotifications(prev => {
         const updated = prev.filter(n => n.id !== id.toString() && n.id !== notificationId);
         console.log('Notification removed. Remaining notifications:', updated.length);
         return updated;
       });
-      
+
       alert("Notification deleted successfully!");
     } catch (error) {
       console.error("Error deleting notification:", error);
@@ -248,6 +248,7 @@ export default function ParentDashboard() {
     read: notification.isRead,
     type: notification.type,
     priority: 'medium', // Default priority
+    orderId: notification.orderId,
   }))
 
   // Chart data from API
@@ -381,7 +382,7 @@ export default function ParentDashboard() {
     scales: {
       y: {
         ticks: {
-          callback: function(value: any) {
+          callback: function (value: any) {
             return 'RWF ' + Number(value).toLocaleString();
           }
         }
@@ -482,7 +483,7 @@ export default function ParentDashboard() {
 
               {activeTab === "notifications" && (
                 <NotificationsTab
-                  notifications={notifications.map(n => ({...n, id: n.id.toString()}))}
+                  notifications={notifications.map(n => ({ ...n, id: n.id.toString() }))}
                   onMarkAllAsRead={handleMarkAllAsRead}
                 />
               )}

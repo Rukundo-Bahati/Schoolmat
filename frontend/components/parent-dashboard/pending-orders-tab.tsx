@@ -59,10 +59,7 @@ export default function PendingOrdersTab({ pendingOrders }: PendingOrdersTabProp
                   >
                     {order.status === "processing" ? "Processing" : "Delivered"}
                   </Badge>
-                  <Button variant="outline" size="sm" className="mt-2 rounded-full bg-transparent">
-                    <Eye className="h-3 w-3 mr-1" />
-                    Track
-                  </Button>
+
                 </div>
               </div>
             ))}

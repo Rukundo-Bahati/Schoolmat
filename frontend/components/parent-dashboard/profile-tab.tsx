@@ -95,25 +95,30 @@ export default function ProfileTab({
 
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Student Information</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Student Information</h3>
+              <p className="text-xs text-gray-500">Read-only</p>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Student information is managed by the school administration and cannot be edited by parents.
+            </p>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Student Name</label>
                 <Input
                   type="text"
                   value={profileData.studentName}
-                  onChange={(e) => onProfileDataChange({ ...profileData, studentName: e.target.value })}
-                  disabled={!isEditingProfile}
-                  className="rounded-full"
+                  disabled={true}
+                  className="rounded-full bg-gray-50"
+                  readOnly
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Grade</label>
                 <select
                   value={profileData.studentGrade}
-                  onChange={(e) => onProfileDataChange({ ...profileData, studentGrade: e.target.value })}
-                  disabled={!isEditingProfile}
-                  className="w-full rounded-full border border-gray-300 px-4 py-2"
+                  disabled={true}
+                  className="w-full rounded-full border border-gray-300 px-4 py-2 bg-gray-50 appearance-none cursor-default"
                 >
                   <option value="Grade 1">Grade 1</option>
                   <option value="Grade 2">Grade 2</option>
@@ -128,9 +133,9 @@ export default function ProfileTab({
                 <Input
                   type="text"
                   value={profileData.studentClass}
-                  onChange={(e) => onProfileDataChange({ ...profileData, studentClass: e.target.value })}
-                  disabled={!isEditingProfile}
-                  className="rounded-full"
+                  disabled={true}
+                  className="rounded-full bg-gray-50"
+                  readOnly
                 />
               </div>
             </div>

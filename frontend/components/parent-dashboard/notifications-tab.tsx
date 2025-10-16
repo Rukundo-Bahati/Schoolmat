@@ -9,6 +9,7 @@ export interface Notification {
   read: boolean
   type: string
   priority: string
+  orderId?: string
 }
 
 interface NotificationsTabProps {
@@ -17,6 +18,23 @@ interface NotificationsTabProps {
 }
 
 export default function NotificationsTab({ notifications, onMarkAllAsRead }: NotificationsTabProps) {
+  // Function to format order ID to user-friendly format
+  const formatOrderId = (orderId: string, date: string) => {
+    const orderDate = new Date(date)
+    const year = orderDate.getFullYear()
+    const month = String(orderDate.getMonth() + 1).padStart(2, '0')
+    const shortId = orderId.slice(-6).toUpperCase()
+    return `${year}-${month}-${shortId}`
+  }
+
+  // Function to replace UUID in message with user-friendly order number
+  const formatNotificationMessage = (message: string, orderId?: string, date?: string) => {
+    if (!orderId || !date) return message
+    
+    const userFriendlyId = formatOrderId(orderId, date)
+    // Replace any occurrence of the UUID with the user-friendly format
+    return message.replace(orderId, userFriendlyId)
+  }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -87,7 +105,9 @@ export default function NotificationsTab({ notifications, onMarkAllAsRead }: Not
                         {notification.priority}
                       </Badge>
                     </div>
-                    <p className="text-gray-900">{notification.message}</p>
+                    <p className="text-gray-900">
+                      {formatNotificationMessage(notification.message, notification.orderId, notification.date)}
+                    </p>
                     <p className="text-sm text-gray-600 mt-1">{notification.date}</p>
                   </div>
                   <div className="flex items-center space-x-2">
