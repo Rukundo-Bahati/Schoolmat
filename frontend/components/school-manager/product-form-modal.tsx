@@ -89,7 +89,7 @@ export default function ProductFormModal({
       // Include image file in the form data if selected
       const productDataWithImage = {
         ...formData,
-        imageFile: imageFile, // Add the image file to the data
+        imageFile: imageFile || undefined, // Convert null to undefined for type compatibility
       }
 
       await onSave(productDataWithImage)

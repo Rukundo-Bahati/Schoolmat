@@ -9,7 +9,7 @@
     "node": ">=20.0.0 <21.0.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && npm run migration:run",
+    "build": "tsc -p tsconfig.build.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",
     "dev": "nest start --watch",
@@ -27,6 +27,7 @@
     "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
     "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
     "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/data-source.ts",
+    "migration:prod": "node scripts/run-migration.js",
     "migrate:images": "ts-node -r tsconfig-paths/register src/scripts/migrate-images-to-cloudinary.ts",
     "verify:cloudinary": "ts-node -r tsconfig-paths/register src/scripts/verify-cloudinary-config.ts"
   },
@@ -61,6 +62,9 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3",
     "twilio": "^5.8.2",
     "typeorm": "^0.3.26"
   },
@@ -84,9 +88,6 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
