@@ -26,8 +26,29 @@ import {
   ArcElement,
   PointElement,
   LineElement,
+  Filler,
+  TimeScale,
+  TimeSeriesScale,
 } from "chart.js"
 import { Bar, Doughnut, Line } from "react-chartjs-2"
+import ChartDataLabels from 'chartjs-plugin-datalabels'
+
+// Register Chart.js components immediately
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+  Filler,
+  TimeScale,
+  TimeSeriesScale,
+  ChartDataLabels
+)
 
 import { generateOrderHistoryPDF, generateSingleOrderPDF, downloadPDF, type OrderData } from "@/lib/pdf-generator"
 import DashboardNavbar from "@/components/parent-dashboard/dashboard-navbar"
@@ -38,6 +59,7 @@ import PendingOrdersTab from "@/components/parent-dashboard/pending-orders-tab"
 import NotificationsTab from "@/components/parent-dashboard/notifications-tab"
 import ProfileTab from "@/components/parent-dashboard/profile-tab"
 import SettingsTab from "@/components/parent-dashboard/settings-tab"
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 
 import {
   fetchParentDashboardOverview,
@@ -62,8 +84,6 @@ const sidebarItems = [
   { id: "settings", label: "Settings", icon: "Settings" },
 ]
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement)
-
 export default function ParentDashboard() {
   const router = useRouter()
   const { user, token, logout } = useAuth()
@@ -71,6 +91,11 @@ export default function ParentDashboard() {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
+  
+  // Confirmation dialog state
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [notificationToDelete, setNotificationToDelete] = useState<string | number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // API data states
   const [dashboardOverview, setDashboardOverview] = useState<ParentDashboardOverview | null>(null)
@@ -151,41 +176,37 @@ export default function ParentDashboard() {
     }
   }
 
-  const handleDeleteNotification = async (id: string | number) => {
-    if (!token) {
-      console.error('No authentication token available');
+  const handleDeleteNotification = (id: string | number) => {
+    setNotificationToDelete(id)
+    setShowDeleteConfirmation(true)
+  }
+
+  const confirmDeleteNotification = async () => {
+    if (!token || !notificationToDelete) {
+      console.error('No authentication token or notification ID available');
       return;
     }
 
-    console.log('Deleting notification with ID:', id, 'Type:', typeof id);
-
-    // Convert ID to string if it's a number
-    let notificationId = typeof id === 'number' ? id.toString() : id;
-
-    // If the ID is a number, try to find the full notification to get its UUID
-    if (typeof id === 'number' || !isNaN(Number(id))) {
-      const notification = parentNotifications.find(n => n.id === id.toString() || n.id === notificationId);
-      if (notification && notification.id) {
-        notificationId = notification.id; // Use the UUID from the notification
-      }
-    }
-
-    // Validate ID is not empty and is a valid UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!notificationId || !uuidRegex.test(notificationId)) {
-      const errorMsg = `Invalid notification ID format: ${notificationId}. Expected a valid UUID.`;
-      console.error(errorMsg);
-      alert('Invalid notification ID format. Please try again.');
-      return;
-    }
+    setIsDeleting(true)
 
     try {
-      console.log('Attempting to delete notification with ID:', notificationId);
+      const notificationId = notificationToDelete.toString()
+      console.log('Deleting notification with UUID:', notificationId);
+
+      // Validate ID is a valid UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(notificationId)) {
+        const errorMsg = `Invalid notification ID format: ${notificationId}. Expected a valid UUID.`;
+        console.error(errorMsg);
+        alert('Invalid notification ID format. Please try again.');
+        return;
+      }
+
       await deleteParentNotification(notificationId, token);
 
       // Update the UI by removing the deleted notification
       setParentNotifications(prev => {
-        const updated = prev.filter(n => n.id !== id.toString() && n.id !== notificationId);
+        const updated = prev.filter(n => n.id !== notificationId);
         console.log('Notification removed. Remaining notifications:', updated.length);
         return updated;
       });
@@ -194,8 +215,12 @@ export default function ParentDashboard() {
     } catch (error) {
       console.error("Error deleting notification:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to delete notification.";
-      console.error("Error details:", { error, notificationId, type: typeof notificationId });
+      console.error("Error details:", { error, notificationToDelete, type: typeof notificationToDelete });
       alert(errorMessage);
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirmation(false)
+      setNotificationToDelete(null)
     }
   }
 
@@ -241,8 +266,9 @@ export default function ParentDashboard() {
     student: order.studentName,
   }))
 
-  const notifications = parentNotifications.map((notification) => ({
-    id: parseInt(notification.id),
+  const notifications = parentNotifications.map((notification, index) => ({
+    id: notification.id, // Keep the original UUID for deletion
+    displayId: index + 1, // User-friendly display ID
     message: notification.message,
     date: notification.createdAt,
     read: notification.isRead,
@@ -263,16 +289,70 @@ export default function ParentDashboard() {
     }],
   } : null
 
-  const categorySpendingData = dashboardOverview ? {
-    labels: dashboardOverview.categorySpending.map(item => item.category),
-    datasets: [{
-      label: "Spending by Category",
-      data: dashboardOverview.categorySpending.map(item => Number(item.total)),
-      backgroundColor: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"],
-      borderColor: ["#2563EB", "#059669", "#D97706", "#DC2626", "#7C3AED", "#0891B2"],
-      borderWidth: 2,
-    }],
-  } : null
+  // Generate category spending data from actual orders if API data is not available or empty
+  const generateCategorySpendingFromOrders = () => {
+    const categoryTotals: { [key: string]: number } = {}
+    
+    // Process delivered orders to calculate spending by category
+    parentOrders
+      .filter(order => order.status === 'delivered')
+      .forEach(order => {
+        order.items.forEach(item => {
+          const category = item.category || 'Other'
+          const itemTotal = item.quantity * item.price
+          categoryTotals[category] = (categoryTotals[category] || 0) + itemTotal
+        })
+      })
+    
+    // Convert to array and sort by spending amount (descending)
+    return Object.entries(categoryTotals)
+      .map(([category, total]) => ({ category, total }))
+      .sort((a, b) => b.total - a.total)
+  }
+
+  const categorySpendingData = (() => {
+    // Use API data if available and not empty, otherwise generate from orders
+    const categoryData = (dashboardOverview?.categorySpending && dashboardOverview.categorySpending.length > 0) 
+      ? dashboardOverview.categorySpending 
+      : generateCategorySpendingFromOrders()
+    
+    if (categoryData.length === 0) return null
+    
+    return {
+      labels: categoryData.map(item => item.category),
+      datasets: [{
+        label: "Spending by Category",
+        data: categoryData.map(item => Number(item.total)),
+        backgroundColor: [
+          "#3B82F6", // Blue
+          "#10B981", // Green  
+          "#F59E0B", // Amber
+          "#EF4444", // Red
+          "#8B5CF6", // Purple
+          "#06B6D4", // Cyan
+          "#F97316", // Orange
+          "#84CC16", // Lime
+          "#EC4899", // Pink
+          "#6B7280"  // Gray
+        ],
+        borderColor: [
+          "#2563EB", // Blue
+          "#059669", // Green
+          "#D97706", // Amber
+          "#DC2626", // Red
+          "#7C3AED", // Purple
+          "#0891B2", // Cyan
+          "#EA580C", // Orange
+          "#65A30D", // Lime
+          "#DB2777", // Pink
+          "#4B5563"  // Gray
+        ],
+        borderWidth: 2,
+        hoverBorderWidth: 3,
+        hoverOffset: 8,
+      }],
+    }
+  })()
 
   // Calculate term-based spending for the current year
   const currentYear = new Date().getFullYear()
@@ -378,9 +458,16 @@ export default function ParentDashboard() {
       legend: {
         position: "top" as const,
       },
+      datalabels: {
+        display: false, // Disable datalabels for line charts
+      },
     },
     scales: {
+      x: {
+        beginAtZero: true,
+      },
       y: {
+        beginAtZero: true,
         ticks: {
           callback: function (value: any) {
             return 'RWF ' + Number(value).toLocaleString();
@@ -396,6 +483,9 @@ export default function ParentDashboard() {
     plugins: {
       legend: {
         display: false, // Disable built-in legend since we have custom legend below
+      },
+      datalabels: {
+        display: false, // Disable datalabels by default, will be overridden in specific charts
       },
     },
     layout: {
@@ -483,8 +573,9 @@ export default function ParentDashboard() {
 
               {activeTab === "notifications" && (
                 <NotificationsTab
-                  notifications={notifications.map(n => ({ ...n, id: n.id.toString() }))}
+                  notifications={notifications}
                   onMarkAllAsRead={handleMarkAllAsRead}
+                  onDeleteNotification={handleDeleteNotification}
                 />
               )}
 
@@ -505,6 +596,22 @@ export default function ParentDashboard() {
             </div>
           </main>
         </div>
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={showDeleteConfirmation}
+          onClose={() => {
+            setShowDeleteConfirmation(false)
+            setNotificationToDelete(null)
+          }}
+          onConfirm={confirmDeleteNotification}
+          title="Delete Notification"
+          description="Are you sure you want to delete this notification? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+          isLoading={isDeleting}
+        />
       </div>
     </ProtectedRoute>
   )

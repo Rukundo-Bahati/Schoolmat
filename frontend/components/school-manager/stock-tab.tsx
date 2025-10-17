@@ -8,6 +8,7 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
+  Power,
 } from "lucide-react"
 import { useTableSort } from "@/hooks/use-table-sort"
 
@@ -22,6 +23,7 @@ interface Product {
   description: string
   supplier: string
   lastUpdated: string
+  isActive?: boolean
 }
 
 interface StockTabProps {
@@ -29,13 +31,15 @@ interface StockTabProps {
   onAddProduct: () => void
   onEditProduct: (product: Product) => void
   onDeleteProduct: (productId: string) => void
+  onToggleProductStatus?: (productId: string) => void
 }
 
 export default function StockTab({
   products,
   onAddProduct,
   onEditProduct,
-  onDeleteProduct
+  onDeleteProduct,
+  onToggleProductStatus
 }: StockTabProps) {
   const lowStockProducts = products.filter((product) => product.stock <= product.minStock)
 
@@ -134,21 +138,32 @@ export default function StockTab({
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <Badge
-                        className={
-                          product.stock <= product.minStock
-                            ? "bg-red-100 text-red-800"
+                      <div className="space-y-1">
+                        <Badge
+                          className={
+                            product.stock <= product.minStock
+                              ? "bg-red-100 text-red-800"
+                              : product.stock <= product.minStock * 2
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-green-100 text-green-800"
+                          }
+                        >
+                          {product.stock <= product.minStock
+                            ? "Low Stock"
                             : product.stock <= product.minStock * 2
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-green-100 text-green-800"
-                        }
-                      >
-                        {product.stock <= product.minStock
-                          ? "Low Stock"
-                          : product.stock <= product.minStock * 2
-                            ? "Medium Stock"
-                            : "In Stock"}
-                      </Badge>
+                              ? "Medium Stock"
+                              : "In Stock"}
+                        </Badge>
+                        <Badge
+                          className={
+                            product.isActive !== false
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }
+                        >
+                          {product.isActive !== false ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-gray-900">{product.supplier}</p>
@@ -161,14 +176,31 @@ export default function StockTab({
                           size="sm"
                           onClick={() => onEditProduct(product)}
                           className="rounded-full bg-transparent"
+                          title="Edit product"
                         >
                           <Edit className="h-3 w-3" />
                         </Button>
+                        {onToggleProductStatus && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onToggleProductStatus(product.id)}
+                            className={`rounded-full ${
+                              product.isActive !== false
+                                ? "text-orange-600 border-orange-600 hover:bg-orange-50"
+                                : "text-green-600 border-green-600 hover:bg-green-50"
+                            } bg-transparent`}
+                            title={product.isActive !== false ? "Disable product" : "Enable product"}
+                          >
+                            <Power className="h-3 w-3" />
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => onDeleteProduct(product.id)}
                           className="rounded-full text-red-600 border-red-600 hover:bg-red-50 bg-transparent"
+                          title="Delete product"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

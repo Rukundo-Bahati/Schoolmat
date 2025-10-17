@@ -11,6 +11,7 @@ export interface SchoolManagerProduct {
   supplier: string
   lastUpdated: string
   imageUrl?: string
+  isActive?: boolean
 }
 
 export interface SchoolManagerOrder {
@@ -106,7 +107,7 @@ export interface Category {
 // Products Management
 export async function fetchSchoolProducts(token: string): Promise<SchoolManagerProduct[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/management`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -127,6 +128,7 @@ export async function fetchSchoolProducts(token: string): Promise<SchoolManagerP
       supplier: product.supplier || '',
       lastUpdated: product.updatedAt || new Date().toISOString().split('T')[0],
       imageUrl: product.imageUrl,
+      isActive: product.isActive !== undefined ? product.isActive : true,
     }));
   } catch (error) {
     console.error('Error fetching school products:', error);
@@ -222,21 +224,47 @@ export async function updateSchoolProduct(token: string, productId: string, prod
   }
 }
 
-export async function deleteSchoolProduct(token: string, productId: string): Promise<void> {
-  try {
+import { ApiResponse, safeApiCall } from './error-utils';
+
+export async function deleteSchoolProduct(token: string, productId: string): Promise<ApiResponse> {
+  return safeApiCall(async () => {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
       },
     });
+    
     if (!response.ok) {
-      throw new Error('Failed to delete product');
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || `Failed to delete product (${response.status}: ${response.statusText})`;
+      
+      // Create a custom error that will be handled by safeApiCall
+      const error = new Error(errorMessage);
+      throw error;
     }
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    throw error;
-  }
+    
+    return { deleted: true };
+  }, 'deleteSchoolProduct');
+}
+
+export async function toggleProductStatus(token: string, productId: string): Promise<ApiResponse<SchoolManagerProduct>> {
+  return safeApiCall(async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/toggle-status`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || `Failed to toggle product status (${response.status}: ${response.statusText})`;
+      throw new Error(errorMessage);
+    }
+    
+    return await response.json();
+  }, 'toggleProductStatus');
 }
 
 export async function updateProductStock(token: string, productId: string, quantity: number): Promise<SchoolManagerProduct> {

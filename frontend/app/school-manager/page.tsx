@@ -29,6 +29,8 @@ import AnalyticsTab from "@/components/school-manager/analytics-tab"
 import CustomersTab from "@/components/school-manager/customers-tab"
 import SettingsTab from "@/components/school-manager/settings-tab-updated"
 import ProductFormModal from "@/components/school-manager/product-form-modal"
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
+import { showErrorMessage } from "@/lib/error-utils"
 
 import { generateOrderHistoryPDF, downloadPDF, type OrderData } from "@/lib/pdf-generator"
 
@@ -41,6 +43,7 @@ import {
   createSchoolProduct,
   updateSchoolProduct,
   deleteSchoolProduct,
+  toggleProductStatus,
   updateOrderStatus,
   type SchoolManagerProduct,
   type SchoolManagerOrder,
@@ -90,6 +93,11 @@ export default function SchoolManagerDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [customerDetailsModalOpen, setCustomerDetailsModalOpen] = useState(false)
   const [selectedCustomerEmail, setSelectedCustomerEmail] = useState<string | null>(null)
+  
+  // Confirmation dialog state for product deletion
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Redirect if user role is not school_manager
   useEffect(() => {
@@ -360,15 +368,46 @@ export default function SchoolManagerDashboard() {
   } : null
 
   // Delete product handler
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = (productId: string) => {
+    setProductToDelete(productId)
+    setShowDeleteConfirmation(true)
+  }
+
+  const confirmDeleteProduct = async () => {
+    if (!token || !productToDelete) return
+
+    setIsDeleting(true)
+
+    const result = await deleteSchoolProduct(token, productToDelete)
+    
+    if (result.success) {
+      setProducts(products.filter((p) => p.id !== productToDelete))
+      alert("✅ Product deleted successfully!")
+    } else {
+      showErrorMessage(result, "Failed to delete product")
+    }
+
+    setIsDeleting(false)
+    setShowDeleteConfirmation(false)
+    setProductToDelete(null)
+  }
+
+  const handleToggleProductStatus = async (productId: string) => {
     if (!token) return
 
-    try {
-      await deleteSchoolProduct(token, productId)
-      setProducts(products.filter((p) => p.id !== productId))
-    } catch (error) {
-      console.error("Failed to delete product:", error)
-      alert("Failed to delete product. Please try again.")
+    const result = await toggleProductStatus(token, productId)
+    
+    if (result.success && result.data) {
+      setProducts(products.map(p => 
+        p.id === productId 
+          ? { ...p, isActive: result.data!.isActive }
+          : p
+      ))
+      const product = products.find(p => p.id === productId)
+      const newStatus = result.data.isActive ? "enabled" : "disabled"
+      alert(`✅ Product "${product?.name}" has been ${newStatus} successfully!`)
+    } else {
+      showErrorMessage(result, "Failed to toggle product status")
     }
   }
 
@@ -713,6 +752,7 @@ export default function SchoolManagerDashboard() {
                   onAddProduct={() => setIsAddingProduct(true)}
                   onEditProduct={handleEditProduct}
                   onDeleteProduct={handleDeleteProduct}
+                  onToggleProductStatus={handleToggleProductStatus}
                 />
               )}
 
@@ -763,6 +803,24 @@ export default function SchoolManagerDashboard() {
         }}
         onSave={handleSaveProduct}
         editingProduct={editingProduct}
+      />
+
+      {/* Confirmation Dialog for Product Deletion */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmation}
+        onClose={() => {
+          setShowDeleteConfirmation(false)
+          setProductToDelete(null)
+        }}
+        onConfirm={confirmDeleteProduct}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? 
+
+⚠️ Important: Products that have been ordered cannot be deleted to preserve order history and maintain data integrity. If deletion fails, consider disabling the product instead."
+        confirmText="Delete Product"
+        cancelText="Cancel"
+        variant="destructive"
+        isLoading={isDeleting}
       />
     </div>
     </ProtectedRoute>

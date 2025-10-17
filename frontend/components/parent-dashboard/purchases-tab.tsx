@@ -58,61 +58,67 @@ export default function PurchasesTab({
       </div>
 
       {/* Purchase Analytics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white shadow-sm">
-          <CardContent className="p-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Amount Paid</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-green-700 mb-2">Total Amount Paid</p>
+                <p className="text-2xl font-bold text-green-900">
                   RWF{" "}
                   {filteredPurchases
                     .reduce((sum, p) => sum + Number.parseInt(p.amount.replace(",", "")), 0)
                     .toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-green-500 rounded-full shadow-lg">
+                <DollarSign className="h-6 w-6 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Orders This Year</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-blue-700 mb-2">Orders This Year</p>
+                <p className="text-2xl font-bold text-blue-900">
                   {filteredPurchases.filter((p) => {
                     const year = new Date(p.date).getFullYear()
                     return year === new Date().getFullYear()
                   }).length}
                 </p>
               </div>
-              <Package className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-blue-500 rounded-full shadow-lg">
+                <Package className="h-6 w-6 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total  Orders</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-emerald-700 mb-2">Total Orders</p>
+                <p className="text-2xl font-bold text-emerald-900">
                   {filteredPurchases.length}
                 </p>
               </div>
-              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-emerald-500 rounded-full shadow-lg">
+                <CheckCircle className="h-6 w-6 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Average Order Value</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-amber-700 mb-2">Average Order Value</p>
+                <p className="text-2xl font-bold text-amber-900">
                   RWF{" "}
                   {filteredPurchases.length > 0
                     ? Math.round(
@@ -122,7 +128,9 @@ export default function PurchasesTab({
                     : "0"}
                 </p>
               </div>
-              <Truck className="h-6 w-6 text-yellow-600" />
+              <div className="p-3 bg-amber-500 rounded-full shadow-lg">
+                <Truck className="h-6 w-6 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>

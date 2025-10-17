@@ -72,55 +72,63 @@ export default function OverviewTab({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+                <p className="text-sm font-medium text-blue-700 mb-2">Total Orders</p>
+                <p className="text-3xl font-bold text-blue-900">{orders.length}</p>
               </div>
-              <ShoppingCart className="h-8 w-8 text-blue-700" />
+              <div className="p-4 bg-blue-500 rounded-full shadow-lg">
+                <ShoppingCart className="h-8 w-8 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-green-700 mb-2">Total Revenue</p>
+                <p className="text-3xl font-bold text-green-900">
                   RWF {orders
                     .filter(order => order.status === "delivered")
                     .reduce((sum, order) => sum + Number(order.totalAmount), 0)
                     .toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
+              <div className="p-4 bg-green-500 rounded-full shadow-lg">
+                <DollarSign className="h-8 w-8 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Products</p>
-                <p className="text-2xl font-bold text-gray-900">25</p>
+                <p className="text-sm font-medium text-purple-700 mb-2">Products</p>
+                <p className="text-3xl font-bold text-purple-900">25</p>
               </div>
-              <Package className="h-8 w-8 text-purple-600" />
+              <div className="p-4 bg-purple-500 rounded-full shadow-lg">
+                <Package className="h-8 w-8 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Low Stock Items</p>
-                <p className="text-2xl font-bold text-gray-900">{lowStockProducts.length}</p>
+                <p className="text-sm font-medium text-red-700 mb-2">Low Stock Items</p>
+                <p className="text-3xl font-bold text-red-900">{lowStockProducts.length}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+              <div className="p-4 bg-red-500 rounded-full shadow-lg">
+                <AlertTriangle className="h-8 w-8 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>

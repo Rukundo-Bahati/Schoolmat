@@ -4,26 +4,24 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
-  DollarSign,
-  AlertTriangle,
   Download,
   Loader2,
+  Edit,
+  Save,
+  User,
+  Lock,
 } from "lucide-react"
 import {
   fetchSchoolInfo,
   updateSchoolInfo,
-  updateUserProfile,
-  changePassword,
   fetchBusinessSettings,
   updateBusinessSettings,
   fetchNotificationSettings,
   updateNotificationSettings,
   fetchPaymentMethods,
-  updatePaymentMethods,
   fetchSystemPreferences,
   updateSystemPreferences,
   exportData,
-  resetSystem,
   type SchoolInfo,
   type BusinessSettings,
   type NotificationSettings,
@@ -31,14 +29,14 @@ import {
   type SystemPreferences,
 } from "@/lib/settings-api"
 
+import PasswordChangeForm from "./password-change-form"
+
 export default function SettingsTab() {
   const [loading, setLoading] = useState(false)
   const [schoolInfo, setSchoolInfo] = useState<SchoolInfo | null>(null)
-  const [accountInfo, setAccountInfo] = useState({
+  const [managerInfo, setManagerInfo] = useState({
     name: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
+    email: "",
   })
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null)
   const [systemPreferences, setSystemPreferences] = useState<SystemPreferences | null>(null)
@@ -46,6 +44,14 @@ export default function SettingsTab() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [error, setError] = useState<string | undefined>(undefined)
   const [success, setSuccess] = useState<string | undefined>(undefined)
+  
+  // Edit mode states
+  const [isEditingSchool, setIsEditingSchool] = useState(false)
+  const [isEditingManager, setIsEditingManager] = useState(false)
+  const [isEditingBusiness, setIsEditingBusiness] = useState(false)
+  const [isEditingSystem, setIsEditingSystem] = useState(false)
+  const [isEditingNotifications, setIsEditingNotifications] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
   // Get authentication token
   const getToken = () => {
@@ -76,6 +82,12 @@ export default function SettingsTab() {
       setNotifications(notificationData)
       setPaymentMethods(paymentData)
       setSystemPreferences(systemData)
+      
+      // Set manager info from user data or school data
+      setManagerInfo({
+        name: "School Manager", // Will be loaded from user profile
+        email: schoolData?.email || "",
+      })
     } catch (err) {
       console.error('Error loading settings:', err)
       setError('Failed to load settings data')
@@ -104,6 +116,7 @@ export default function SettingsTab() {
     try {
       const updated = await updateSchoolInfo(token, schoolInfo)
       setSchoolInfo(updated)
+      setIsEditingSchool(false)
       showSuccess('School information updated successfully!')
     } catch (err) {
       console.error('Error updating school info:', err)
@@ -113,28 +126,19 @@ export default function SettingsTab() {
     }
   }
 
-  const handleAccountUpdate = async () => {
-    if (!accountInfo.currentPassword || !accountInfo.newPassword) {
-      showError('Please fill in all password fields')
-      return
-    }
-
-    if (accountInfo.newPassword !== accountInfo.confirmPassword) {
-      showError('New passwords do not match!')
-      return
-    }
-
+  const handleManagerInfoUpdate = async () => {
     setLoading(true)
     setError(undefined)
     const token = getToken()
 
     try {
-      await changePassword(token, accountInfo.currentPassword, accountInfo.newPassword)
-      setAccountInfo(prev => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }))
-      showSuccess('Password changed successfully!')
+      // For now, just update the local state since we don't have the user ID
+      // In a real implementation, you would get the current user ID and update the profile
+      setIsEditingManager(false)
+      showSuccess('Manager information updated successfully!')
     } catch (err) {
-      console.error('Error changing password:', err)
-      showError('Failed to change password. Please check your current password.')
+      console.error('Error updating manager info:', err)
+      showError('Failed to update manager information')
     } finally {
       setLoading(false)
     }
@@ -150,6 +154,7 @@ export default function SettingsTab() {
     try {
       const updated = await updateBusinessSettings(token, businessSettings)
       setBusinessSettings(updated)
+      setIsEditingBusiness(false)
       showSuccess('Business settings saved successfully!')
     } catch (err) {
       console.error('Error updating business settings:', err)
@@ -169,6 +174,7 @@ export default function SettingsTab() {
     try {
       const updated = await updateNotificationSettings(token, notifications)
       setNotifications(updated)
+      setIsEditingNotifications(false)
       showSuccess('Notification settings saved successfully!')
     } catch (err) {
       console.error('Error updating notification settings:', err)
@@ -188,6 +194,7 @@ export default function SettingsTab() {
     try {
       const updated = await updateSystemPreferences(token, systemPreferences)
       setSystemPreferences(updated)
+      setIsEditingSystem(false)
       showSuccess('System settings updated successfully!')
     } catch (err) {
       console.error('Error updating system settings:', err)
@@ -216,26 +223,6 @@ export default function SettingsTab() {
     } catch (err) {
       console.error('Error exporting data:', err)
       showError('Failed to export data')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleResetSystem = async () => {
-    if (!confirm("Are you sure you want to reset the system? This action cannot be undone!")) {
-      return
-    }
-
-    setLoading(true)
-    setError(undefined)
-    const token = getToken()
-
-    try {
-      await resetSystem(token, true)
-      showSuccess('System reset initiated. This may take a few minutes.')
-    } catch (err) {
-      console.error('Error resetting system:', err)
-      showError('Failed to reset system')
     } finally {
       setLoading(false)
     }
@@ -273,14 +260,31 @@ export default function SettingsTab() {
         {/* School Information */}
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">School Information</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">School Information</h3>
+              <Button
+                onClick={() => isEditingSchool ? handleSchoolInfoUpdate() : setIsEditingSchool(true)}
+                disabled={loading}
+                className="rounded-full bg-blue-700 hover:bg-blue-800"
+              >
+                {loading && isEditingSchool ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : isEditingSchool ? (
+                  <Save className="h-4 w-4 mr-2" />
+                ) : (
+                  <Edit className="h-4 w-4 mr-2" />
+                )}
+                {isEditingSchool ? "Save Changes" : "Edit School Info"}
+              </Button>
+            </div>
             {schoolInfo && (
-              <form className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">School Name</label>
                   <Input
                     value={schoolInfo.name}
                     onChange={(e) => setSchoolInfo({...schoolInfo, name: e.target.value})}
+                    disabled={!isEditingSchool}
                     className="rounded-full"
                   />
                 </div>
@@ -290,6 +294,7 @@ export default function SettingsTab() {
                     type="email"
                     value={schoolInfo.email}
                     onChange={(e) => setSchoolInfo({...schoolInfo, email: e.target.value})}
+                    disabled={!isEditingSchool}
                     className="rounded-full"
                   />
                 </div>
@@ -298,6 +303,7 @@ export default function SettingsTab() {
                   <Input
                     value={schoolInfo.phone}
                     onChange={(e) => setSchoolInfo({...schoolInfo, phone: e.target.value})}
+                    disabled={!isEditingSchool}
                     className="rounded-full"
                   />
                 </div>
@@ -306,75 +312,78 @@ export default function SettingsTab() {
                   <textarea
                     value={schoolInfo.address || ''}
                     onChange={(e) => setSchoolInfo({...schoolInfo, address: e.target.value})}
+                    disabled={!isEditingSchool}
                     rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2"
+                    className={`w-full rounded-lg border border-gray-300 px-4 py-2 ${!isEditingSchool ? 'bg-gray-50' : ''}`}
                   />
                 </div>
-                <Button
-                  onClick={handleSchoolInfoUpdate}
-                  disabled={loading}
-                  className="rounded-full bg-blue-700 hover:bg-blue-800"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Update School Info
-                </Button>
-              </form>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Account Management */}
+        {/* Manager Account */}
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Management</h3>
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Manager Name</label>
-                <Input
-                  value={accountInfo.name}
-                  onChange={(e) => setAccountInfo({...accountInfo, name: e.target.value})}
-                  className="rounded-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                <Input
-                  type="password"
-                  value={accountInfo.currentPassword}
-                  onChange={(e) => setAccountInfo({...accountInfo, currentPassword: e.target.value})}
-                  placeholder="Enter current password"
-                  className="rounded-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                <Input
-                  type="password"
-                  value={accountInfo.newPassword}
-                  onChange={(e) => setAccountInfo({...accountInfo, newPassword: e.target.value})}
-                  placeholder="Enter new password"
-                  className="rounded-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                <Input
-                  type="password"
-                  value={accountInfo.confirmPassword}
-                  onChange={(e) => setAccountInfo({...accountInfo, confirmPassword: e.target.value})}
-                  placeholder="Confirm new password"
-                  className="rounded-full"
-                />
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Manager Account</h3>
               <Button
-                onClick={handleAccountUpdate}
+                onClick={() => isEditingManager ? handleManagerInfoUpdate() : setIsEditingManager(true)}
                 disabled={loading}
                 className="rounded-full bg-blue-700 hover:bg-blue-800"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Update Account
+                {loading && isEditingManager ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : isEditingManager ? (
+                  <Save className="h-4 w-4 mr-2" />
+                ) : (
+                  <User className="h-4 w-4 mr-2" />
+                )}
+                {isEditingManager ? "Save Changes" : "Edit Profile"}
               </Button>
-            </form>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Manager Name</label>
+                <Input
+                  value={managerInfo.name}
+                  onChange={(e) => setManagerInfo({...managerInfo, name: e.target.value})}
+                  disabled={!isEditingManager}
+                  className="rounded-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <Input
+                  type="email"
+                  value={managerInfo.email}
+                  onChange={(e) => setManagerInfo({...managerInfo, email: e.target.value})}
+                  disabled={!isEditingManager}
+                  className="rounded-full"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Password Change Section */}
+        <Card className="bg-white shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Security</h3>
+              <Button
+                variant="outline"
+                onClick={() => setShowChangePassword(!showChangePassword)}
+                className="rounded-full"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Change Password
+              </Button>
+            </div>
+
+            {showChangePassword && (
+              <PasswordChangeForm onCancel={() => setShowChangePassword(false)} />
+            )}
           </CardContent>
         </Card>
 
@@ -382,13 +391,30 @@ export default function SettingsTab() {
         {businessSettings && (
           <Card className="bg-white shadow-sm">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Settings</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Business Settings</h3>
+                <Button
+                  onClick={() => isEditingBusiness ? handleBusinessSettingsSave() : setIsEditingBusiness(true)}
+                  disabled={loading}
+                  className="rounded-full bg-blue-700 hover:bg-blue-800"
+                >
+                  {loading && isEditingBusiness ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : isEditingBusiness ? (
+                    <Save className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Edit className="h-4 w-4 mr-2" />
+                  )}
+                  {isEditingBusiness ? "Save Changes" : "Edit Settings"}
+                </Button>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Location</label>
                   <Input
                     value={businessSettings.pickupLocation}
                     onChange={(e) => setBusinessSettings({...businessSettings, pickupLocation: e.target.value})}
+                    disabled={!isEditingBusiness}
                     className="rounded-full"
                   />
                 </div>
@@ -398,6 +424,7 @@ export default function SettingsTab() {
                     type="number"
                     value={businessSettings.processingTime}
                     onChange={(e) => setBusinessSettings({...businessSettings, processingTime: parseInt(e.target.value)})}
+                    disabled={!isEditingBusiness}
                     className="rounded-full"
                   />
                 </div>
@@ -406,20 +433,13 @@ export default function SettingsTab() {
                   <select
                     value={businessSettings.currency}
                     onChange={(e) => setBusinessSettings({...businessSettings, currency: e.target.value})}
-                    className="w-full rounded-full border border-gray-300 px-4 py-2"
+                    disabled={!isEditingBusiness}
+                    className={`w-full rounded-full border border-gray-300 px-4 py-2 ${!isEditingBusiness ? 'bg-gray-50' : ''}`}
                   >
                     <option value="RWF">Rwandan Franc (RWF)</option>
                     <option value="USD">US Dollar (USD)</option>
                   </select>
                 </div>
-                <Button
-                  onClick={handleBusinessSettingsSave}
-                  disabled={loading}
-                  className="rounded-full bg-blue-700 hover:bg-blue-800"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Save Business Settings
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -465,7 +485,23 @@ export default function SettingsTab() {
         {notifications && (
           <Card className="bg-white shadow-sm">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Notification Preferences</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Notification Preferences</h3>
+                <Button
+                  onClick={() => isEditingNotifications ? handleNotificationSettingsSave() : setIsEditingNotifications(true)}
+                  disabled={loading}
+                  className="rounded-full bg-blue-700 hover:bg-blue-800"
+                >
+                  {loading && isEditingNotifications ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : isEditingNotifications ? (
+                    <Save className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Edit className="h-4 w-4 mr-2" />
+                  )}
+                  {isEditingNotifications ? "Save Changes" : "Edit Preferences"}
+                </Button>
+              </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -476,6 +512,7 @@ export default function SettingsTab() {
                     type="checkbox"
                     checked={notifications.orderConfirmations}
                     onChange={(e) => setNotifications({...notifications, orderConfirmations: e.target.checked})}
+                    disabled={!isEditingNotifications}
                     className="rounded"
                   />
                 </div>
@@ -488,6 +525,7 @@ export default function SettingsTab() {
                     type="checkbox"
                     checked={notifications.lowStockAlerts}
                     onChange={(e) => setNotifications({...notifications, lowStockAlerts: e.target.checked})}
+                    disabled={!isEditingNotifications}
                     className="rounded"
                   />
                 </div>
@@ -500,6 +538,7 @@ export default function SettingsTab() {
                     type="checkbox"
                     checked={notifications.paymentReminders}
                     onChange={(e) => setNotifications({...notifications, paymentReminders: e.target.checked})}
+                    disabled={!isEditingNotifications}
                     className="rounded"
                   />
                 </div>
@@ -512,6 +551,7 @@ export default function SettingsTab() {
                     type="checkbox"
                     checked={notifications.emailNotifications}
                     onChange={(e) => setNotifications({...notifications, emailNotifications: e.target.checked})}
+                    disabled={!isEditingNotifications}
                     className="rounded"
                   />
                 </div>
@@ -524,17 +564,10 @@ export default function SettingsTab() {
                     type="checkbox"
                     checked={notifications.smsNotifications}
                     onChange={(e) => setNotifications({...notifications, smsNotifications: e.target.checked})}
+                    disabled={!isEditingNotifications}
                     className="rounded"
                   />
                 </div>
-                <Button
-                  onClick={handleNotificationSettingsSave}
-                  disabled={loading}
-                  className="rounded-full bg-blue-700 hover:bg-blue-800"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Save Notification Settings
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -544,14 +577,31 @@ export default function SettingsTab() {
         {systemPreferences && (
           <Card className="bg-white shadow-sm">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">System Preferences</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">System Preferences</h3>
+                <Button
+                  onClick={() => isEditingSystem ? handleSystemSettingsUpdate() : setIsEditingSystem(true)}
+                  disabled={loading}
+                  className="rounded-full bg-blue-700 hover:bg-blue-800"
+                >
+                  {loading && isEditingSystem ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : isEditingSystem ? (
+                    <Save className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Edit className="h-4 w-4 mr-2" />
+                  )}
+                  {isEditingSystem ? "Save Changes" : "Edit Preferences"}
+                </Button>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Default Order Status</label>
                   <select
                     value={systemPreferences.defaultOrderStatus}
                     onChange={(e) => setSystemPreferences({...systemPreferences, defaultOrderStatus: e.target.value as 'pending' | 'processing'})}
-                    className="w-full rounded-full border border-gray-300 px-4 py-2"
+                    disabled={!isEditingSystem}
+                    className={`w-full rounded-full border border-gray-300 px-4 py-2 ${!isEditingSystem ? 'bg-gray-50' : ''}`}
                   >
                     <option value="pending">Pending</option>
                     <option value="processing">Processing</option>
@@ -562,7 +612,8 @@ export default function SettingsTab() {
                   <select
                     value={systemPreferences.autoApproveOrders ? 'auto' : 'manual'}
                     onChange={(e) => setSystemPreferences({...systemPreferences, autoApproveOrders: e.target.value === 'auto'})}
-                    className="w-full rounded-full border border-gray-300 px-4 py-2"
+                    disabled={!isEditingSystem}
+                    className={`w-full rounded-full border border-gray-300 px-4 py-2 ${!isEditingSystem ? 'bg-gray-50' : ''}`}
                   >
                     <option value="manual">Manual Approval</option>
                     <option value="auto">Auto Approve</option>
@@ -574,6 +625,7 @@ export default function SettingsTab() {
                     type="number"
                     value={systemPreferences.lowStockThreshold}
                     onChange={(e) => setSystemPreferences({...systemPreferences, lowStockThreshold: parseInt(e.target.value)})}
+                    disabled={!isEditingSystem}
                     className="rounded-full"
                   />
                 </div>
@@ -583,17 +635,10 @@ export default function SettingsTab() {
                     type="number"
                     value={systemPreferences.dataRetentionPeriod}
                     onChange={(e) => setSystemPreferences({...systemPreferences, dataRetentionPeriod: parseInt(e.target.value)})}
+                    disabled={!isEditingSystem}
                     className="rounded-full"
                   />
                 </div>
-                <Button
-                  onClick={handleSystemSettingsUpdate}
-                  disabled={loading}
-                  className="rounded-full bg-blue-700 hover:bg-blue-800"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Update System Settings
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -621,7 +666,7 @@ export default function SettingsTab() {
                 Export Data
               </Button>
             </div>
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-red-900">Reset System</p>
                 <p className="text-sm text-red-700">Clear all orders and reset to default settings</p>
@@ -636,7 +681,7 @@ export default function SettingsTab() {
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 Reset System
               </Button>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>

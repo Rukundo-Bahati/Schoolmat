@@ -67,7 +67,7 @@ export default function SettingsTab() {
                   Export
                 </Button>
               </div>
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900">Delete Account</p>
                   <p className="text-sm text-gray-600">Permanently delete your account</p>
@@ -78,7 +78,7 @@ export default function SettingsTab() {
                 >
                   Delete
                 </Button>
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>

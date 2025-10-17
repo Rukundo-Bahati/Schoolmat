@@ -18,6 +18,12 @@ export class ProductsController {
     return this.productsService.findAll();
   }
 
+  @Get('management')
+  @UseGuards(JwtAuthGuard)
+  findAllForManagement() {
+    return this.productsService.findAllForManagement();
+  }
+
   @Get('search')
   searchProducts(@Query('q') query: string) {
     return this.productsService.searchProducts(query);
@@ -43,6 +49,12 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard)
   updateStock(@Param('id') id: string, @Body('quantity') quantity: number) {
     return this.productsService.updateStock(id, quantity);
+  }
+
+  @Patch(':id/toggle-status')
+  @UseGuards(JwtAuthGuard)
+  toggleStatus(@Param('id') id: string) {
+    return this.productsService.toggleProductStatus(id);
   }
 
   @Delete(':id')

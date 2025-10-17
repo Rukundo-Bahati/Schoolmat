@@ -13,6 +13,7 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
 })
 
 export const metadata: Metadata = {
@@ -42,8 +43,14 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="theme-color" content="#2563eb" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body className={`font-sans ${poppins.variable}`}>
+      <body className={`${poppins.className} ${poppins.variable}`}>
         <AuthProvider>
           <CartProvider>
             {children}

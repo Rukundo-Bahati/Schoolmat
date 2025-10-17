@@ -24,6 +24,7 @@ export class ProductsService {
 
   async findAll(): Promise<ProductResponseDto[]> {
     const products = await this.productRepository.find({
+      where: { isActive: true },
       order: { lastUpdated: 'DESC' },
     });
     return products as ProductResponseDto[];
@@ -68,12 +69,20 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    await this.productRepository.remove(product);
+    try {
+      await this.productRepository.remove(product);
+    } catch (error) {
+      // Check if it's a foreign key constraint error
+      if (error.code === '23503' || error.message?.includes('foreign key constraint')) {
+        throw new BadRequestException('Cannot delete product because it has been ordered by customers. You can disable it instead.');
+      }
+      throw error;
+    }
   }
 
   async findByCategory(categoryName: string): Promise<ProductResponseDto[]> {
     const products = await this.productRepository.find({
-      where: { category: categoryName },
+      where: { category: categoryName, isActive: true },
       order: { lastUpdated: 'DESC' },
     });
     return products as ProductResponseDto[];
@@ -82,7 +91,7 @@ export class ProductsService {
   async searchProducts(query: string): Promise<ProductResponseDto[]> {
     const products = await this.productRepository
       .createQueryBuilder('product')
-      .where('product.name ILIKE :query OR product.description ILIKE :query', {
+      .where('(product.name ILIKE :query OR product.description ILIKE :query) AND product.isActive = true', {
         query: `%${query}%`,
       })
       .orderBy('product.lastUpdated', 'DESC')
@@ -105,5 +114,25 @@ export class ProductsService {
     product.stock += quantity;
     const updatedProduct = await this.productRepository.save(product);
     return updatedProduct as ProductResponseDto;
+  }
+
+  async toggleProductStatus(id: string): Promise<ProductResponseDto> {
+    const product = await this.productRepository.findOne({ where: { id } });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    product.isActive = !product.isActive;
+    product.lastUpdated = new Date();
+    const updatedProduct = await this.productRepository.save(product);
+    return updatedProduct as ProductResponseDto;
+  }
+
+  async findAllForManagement(): Promise<ProductResponseDto[]> {
+    const products = await this.productRepository.find({
+      order: { lastUpdated: 'DESC' },
+    });
+    return products as ProductResponseDto[];
   }
 }

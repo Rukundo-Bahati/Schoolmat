@@ -41,6 +41,9 @@ export class Product {
   @Column('int', { default: 0 })
   reviews: number;
 
+  @Column({ default: true })
+  isActive!: boolean;
+
   @CreateDateColumn()
   lastUpdated!: Date;
 }

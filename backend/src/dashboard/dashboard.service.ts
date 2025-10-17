@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order, OrderStatus } from '../common/entities/order.entity';
 import { OrderItem } from '../common/entities/order-item.entity';
+import { Product } from '../common/entities/product.entity';
+import { Category } from '../common/entities/category.entity';
 
 @Injectable()
 export class DashboardService {
@@ -11,6 +13,10 @@ export class DashboardService {
     private orderRepository: Repository<Order>,
     @InjectRepository(OrderItem)
     private orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async getOverviewData(userId: string) {
@@ -27,6 +33,13 @@ export class DashboardService {
     const totalSpent = await this.getTotalSpent(userId);
     const totalOrders = await this.getTotalOrders(userId);
     const pendingOrders = await this.getPendingOrders(userId);
+
+    // Log category spending for debugging
+    console.log('Category spending data for user', userId, ':', categorySpending);
+
+    // Also log available categories for debugging
+    const allCategories = await this.categoryRepository.find();
+    console.log('Available categories:', allCategories.map(cat => cat.name));
 
     return {
       monthlySpending,
@@ -60,21 +73,39 @@ export class DashboardService {
   }
 
   private async getCategorySpending(userId: string) {
+    // Get all valid category names from the categories table
+    const validCategories = await this.categoryRepository.find({
+      select: ['name'],
+    });
+    const validCategoryNames = validCategories.map(cat => cat.name);
+
     const categoryData = await this.orderItemRepository
       .createQueryBuilder('item')
-      .select('item.category')
+      .select('COALESCE(NULLIF(TRIM(item.category), \'\'), NULLIF(TRIM(product.category), \'\'), \'Other\') as category')
       .addSelect('SUM(item.price * item.quantity) as total')
       .innerJoin('item.order', 'order')
+      .leftJoin('item.product', 'product')
       .where('order.userId = :userId', { userId })
       .andWhere('order.status = :status', { status: OrderStatus.DELIVERED })
-      .groupBy('item.category')
+      .groupBy('COALESCE(NULLIF(TRIM(item.category), \'\'), NULLIF(TRIM(product.category), \'\'), \'Other\')')
+      .having('SUM(item.price * item.quantity) > 0') // Only include categories with spending
       .orderBy('total', 'DESC')
       .getRawMany();
 
-    return categoryData.map(cat => ({
-      category: cat.category,
-      total: Number(cat.total),
-    }));
+    return categoryData.map(cat => {
+      // Ensure category name is properly formatted and valid
+      let categoryName = cat.category || 'Other';
+      
+      // If the category name is not in our valid categories list, use 'Other'
+      if (categoryName !== 'Other' && !validCategoryNames.includes(categoryName)) {
+        categoryName = 'Other';
+      }
+
+      return {
+        category: categoryName,
+        total: Number(cat.total) || 0,
+      };
+    });
   }
 
   private async getRecentOrders(userId: string) {
@@ -91,7 +122,7 @@ export class DashboardService {
       date: order.createdAt.toISOString().split('T')[0],
       amount: order.totalAmount.toString(),
       status: order.status,
-      category: order.items[0]?.category || 'Mixed',
+      category: order.items[0]?.category || order.items[0]?.product?.category || 'Mixed',
     }));
   }
 
